@@ -15,20 +15,40 @@
  */
 
 import { Routes } from '../features/template/router';
-import { Home } from './project/Home';
+import { Home as Welcome } from './project/Home';
 import { AIChat } from './project/AIChat';
 import { Todos } from './project/Todos';
 import { SingleTodo } from './project/SingleTodo';
 import { Dashboard } from './project/Dashboard';
 import { Debug } from './project/Debug';
+import { Home } from './project/HomeFeed';
+import { Lists, AddListRoute, EditListRoute } from './project/Lists';
+import {
+  ListView,
+  AddItemView,
+  ItemDetailView,
+  EditItemView,
+} from './project/listDispatcher';
 
 /**
  * Project route definitions.
  * These are merged with template routes in index.ts.
  */
 export const projectRoutes: Routes = {
-  // Example app routes (template demo):
+  // Home (all lists feed)
   '/': Home,
+
+  // Lists management + per-list flows
+  '/lists': Lists,
+  '/lists/new': AddListRoute,
+  '/lists/:listId': ListView,
+  '/lists/:listId/edit': EditListRoute,
+  '/lists/:listId/items/new': AddItemView,
+  '/lists/:listId/items/:itemId': ItemDetailView,
+  '/lists/:listId/items/:itemId/edit': EditItemView,
+
+  // Template demo routes (kept for reference)
+  '/welcome': Welcome,
   '/ai-chat': AIChat,
   '/todos': Todos,
   '/todos/:todoId': SingleTodo,

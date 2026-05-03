@@ -9,6 +9,7 @@
  */
 
 // Add project-specific features below:
+export * from './project/lists';
+export * from './project/smart-list';
+export * from './project/chores';
 
-// Empty export to make this a valid module (required by TypeScript)
-export {};

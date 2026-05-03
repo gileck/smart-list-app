@@ -1,0 +1,198 @@
+import { useMemo, useState } from 'react';
+import { ChevronLeft } from 'lucide-react';
+import { Button } from '@/client/components/template/ui/button';
+import { toast } from '@/client/components/template/ui/toast';
+import { useRouter, useSmartListStore } from '@/client/features';
+import { NotFoundCard, RoundIconButton } from '@/client/components/project/list-ui';
+
+type Props = {
+    mode: 'add' | 'edit';
+};
+
+export function AddEditItem({ mode }: Props) {
+    const { navigate, routeParams } = useRouter();
+    const isEdit = mode === 'edit';
+    const listId = routeParams.listId;
+    const itemId = isEdit ? routeParams.itemId : null;
+
+    const items = useSmartListStore((s) => s.items);
+    const addItem = useSmartListStore((s) => s.addItem);
+    const updateItem = useSmartListStore((s) => s.updateItem);
+
+    const editItem = useMemo(
+        () => (itemId ? items.find((i) => i.id === itemId) ?? null : null),
+        [items, itemId]
+    );
+
+    // eslint-disable-next-line state-management/prefer-state-architecture -- text input
+    const [name, setName] = useState(editItem?.name ?? '');
+    // eslint-disable-next-line state-management/prefer-state-architecture -- text input
+    const [qtyTotal, setQtyTotal] = useState(editItem ? String(editItem.quantity_total) : '');
+    // eslint-disable-next-line state-management/prefer-state-architecture -- text input
+    const [perDay, setPerDay] = useState(editItem ? String(editItem.consumption_per_day) : '');
+
+    const parsedTotal = parseFloat(qtyTotal);
+    const parsedPerDay = parseFloat(perDay);
+
+    const baseForPreview = isEdit ? editItem?.quantity_left ?? NaN : parsedTotal;
+
+    const daysPreview =
+        !Number.isNaN(parsedPerDay) &&
+        parsedPerDay > 0 &&
+        !Number.isNaN(baseForPreview) &&
+        baseForPreview >= 0
+            ? Math.max(0, Math.ceil(baseForPreview / parsedPerDay))
+            : null;
+
+    const canSave =
+        name.trim().length > 0 &&
+        !Number.isNaN(parsedTotal) &&
+        parsedTotal > 0 &&
+        !Number.isNaN(parsedPerDay) &&
+        parsedPerDay >= 0;
+
+    const effectiveListId = listId ?? editItem?.listId;
+
+    const goBack = () => {
+        if (isEdit && itemId && effectiveListId) {
+            navigate(`/lists/${effectiveListId}/items/${itemId}`);
+        } else if (effectiveListId) {
+            navigate(`/lists/${effectiveListId}`);
+        } else {
+            navigate('/');
+        }
+    };
+
+    const handleSave = () => {
+        if (!canSave || !effectiveListId) return;
+        const trimmedName = name.trim();
+
+        if (isEdit && editItem) {
+            updateItem(editItem.id, {
+                name: trimmedName,
+                quantity_total: parsedTotal,
+                consumption_per_day: parsedPerDay,
+            });
+            toast.success(`${trimmedName} updated`);
+            navigate(`/lists/${effectiveListId}/items/${editItem.id}`);
+            return;
+        }
+
+        addItem({
+            listId: effectiveListId,
+            name: trimmedName,
+            quantity_total: parsedTotal,
+            consumption_per_day: parsedPerDay,
+        });
+        toast.success(`${trimmedName} added`);
+        navigate(`/lists/${effectiveListId}`);
+    };
+
+    if (isEdit && !editItem) {
+        return (
+            <NotFoundCard
+                message="Item not found."
+                onBack={() => navigate('/')}
+                backLabel="Back to list"
+            />
+        );
+    }
+
+    return (
+        <div className="mx-auto w-full max-w-md pb-24">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                <header className="flex items-center gap-3 px-5 pt-5 pb-4">
+                    <RoundIconButton aria-label="Back" onClick={goBack}>
+                        <ChevronLeft className="h-4 w-4" />
+                    </RoundIconButton>
+                    <h1 className="flex-1 text-[17px] font-semibold tracking-tight">
+                        {isEdit ? 'Edit Item' : 'Add Item'}
+                    </h1>
+                </header>
+
+                <div className="border-t border-border pt-2 pb-6">
+                <FormField label="Item name">
+                    <input
+                        autoFocus={!isEdit}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. Eggs"
+                        className="w-full bg-transparent border-0 border-b-2 border-border focus:border-foreground outline-none py-2 text-[22px] font-normal placeholder:text-muted-foreground/60 transition-colors"
+                    />
+                </FormField>
+
+                <div className="flex">
+                    <div className="flex-1 border-r border-border">
+                        <FormField label={isEdit ? 'Quantity total' : 'Quantity bought'}>
+                            <input
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                value={qtyTotal}
+                                onChange={(e) => setQtyTotal(e.target.value)}
+                                placeholder="24"
+                                className="w-full bg-transparent border-0 border-b-2 border-border focus:border-foreground outline-none py-2 text-[22px] font-normal placeholder:text-muted-foreground/60 transition-colors"
+                            />
+                        </FormField>
+                    </div>
+                    <div className="flex-1">
+                        <FormField label="Use per day">
+                            <input
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="0.1"
+                                value={perDay}
+                                onChange={(e) => setPerDay(e.target.value)}
+                                placeholder="3"
+                                className="w-full bg-transparent border-0 border-b-2 border-border focus:border-foreground outline-none py-2 text-[22px] font-normal placeholder:text-muted-foreground/60 transition-colors"
+                            />
+                        </FormField>
+                    </div>
+                </div>
+
+                <div className="px-5 pt-2">
+                    <p
+                        className={`text-xs h-4 transition-colors ${
+                            daysPreview !== null
+                                ? 'text-success font-medium'
+                                : 'text-muted-foreground/70 italic'
+                        }`}
+                    >
+                        {daysPreview !== null
+                            ? `→ ~${daysPreview} day${daysPreview !== 1 ? 's' : ''} until empty`
+                            : 'Fill in quantity and daily use to see estimate'}
+                    </p>
+                </div>
+
+                <div className="h-px bg-border mt-6" />
+
+                <div className="px-5 pt-6 flex flex-col gap-2.5">
+                    <Button
+                        size="lg"
+                        onClick={handleSave}
+                        disabled={!canSave}
+                        className="w-full"
+                    >
+                        {isEdit ? 'Save Changes' : 'Add to List'}
+                    </Button>
+                    <Button variant="outline" size="lg" onClick={goBack} className="w-full">
+                        Cancel
+                    </Button>
+                </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <div className="px-5 pt-5 flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                {label}
+            </span>
+            {children}
+        </div>
+    );
+}
