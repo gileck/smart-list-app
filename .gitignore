@@ -73,5 +73,6 @@ child-projects.json
 
 # npm lock file (project uses yarn)
 package-lock.json
+yarn.lock
 .telegram-bot-sessions.json
 .agent-worktrees/
