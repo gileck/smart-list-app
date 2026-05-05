@@ -1,9 +1,9 @@
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const appConfig = {
-    appName: 'App Template AI',
+    appName: 'smart-list-app',
     cacheType: isProduction ? 's3' : 's3',
-    dbName: 'app_template_db',
+    dbName: 'smart_list_app_db',
 
     // Production URL for the app (used for clarification links in Telegram)
     // Override via NEXT_PUBLIC_APP_URL env var
