@@ -6,16 +6,38 @@ import { genId, makeSampleItems } from './utils';
 export type NewItemInput = {
     listId: string;
     name: string;
+    emoji?: string;
     quantity_total: number;
     consumption_per_day: number;
+    restock_presets?: number[];
 };
 
 export type EditItemInput = {
     name: string;
+    emoji?: string;
     quantity_total: number;
     quantity_left?: number;
     consumption_per_day: number;
+    restock_presets?: number[];
 };
+
+function normalizeEmoji(value: string | undefined): string | undefined {
+    if (!value) return undefined;
+    const trimmed = value.trim().slice(0, 8);
+    return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function normalizePresets(presets: number[] | undefined): number[] | undefined {
+    if (!presets) return undefined;
+    const cleaned = Array.from(
+        new Set(
+            presets
+                .map((n) => Math.floor(n))
+                .filter((n) => Number.isFinite(n) && n > 0)
+        )
+    ).sort((a, b) => a - b);
+    return cleaned.length > 0 ? cleaned : undefined;
+}
 
 interface SmartListState {
     items: SmartListItem[];
@@ -56,10 +78,12 @@ export const useSmartListStore = createStore<SmartListState>({
                 id: genId(),
                 listId: input.listId,
                 name: input.name.trim(),
+                emoji: normalizeEmoji(input.emoji),
                 quantity_total: total,
                 quantity_left: total,
                 consumption_per_day: perDay,
                 restock_amount: total,
+                restock_presets: normalizePresets(input.restock_presets),
                 created_at: now,
                 updated_at: now,
             };
@@ -83,10 +107,12 @@ export const useSmartListStore = createStore<SmartListState>({
                     return {
                         ...item,
                         name: input.name.trim(),
+                        emoji: normalizeEmoji(input.emoji),
                         quantity_total: total,
                         quantity_left: nextLeft,
                         consumption_per_day: perDay,
                         restock_amount: total,
+                        restock_presets: normalizePresets(input.restock_presets),
                         updated_at: now,
                     };
                 }),

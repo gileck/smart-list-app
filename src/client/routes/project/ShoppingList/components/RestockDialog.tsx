@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -8,6 +8,7 @@ import {
     DialogTitle,
 } from '@/client/components/template/ui/dialog';
 import { Button } from '@/client/components/template/ui/button';
+import { RoundIconButton } from '@/client/components/project/list-ui';
 import type { SmartListItem } from '@/client/features';
 
 type Props = {
@@ -17,19 +18,26 @@ type Props = {
     onRestock: (amount: number) => void;
 };
 
-export function RestockDialog({ open, onOpenChange, item, onRestock }: Props) {
-    const defaultAmount = item?.restock_amount ?? 0;
+const CUSTOM_INITIAL = 1;
 
+export function RestockDialog({ open, onOpenChange, item, onRestock }: Props) {
     // eslint-disable-next-line state-management/prefer-state-architecture -- text input
-    const [customAmount, setCustomAmount] = useState(String(defaultAmount));
+    const [customAmount, setCustomAmount] = useState(String(CUSTOM_INITIAL));
 
     useEffect(() => {
         if (open) {
-            setCustomAmount(String(defaultAmount));
+            setCustomAmount(String(CUSTOM_INITIAL));
         }
-    }, [open, defaultAmount]);
+    }, [open]);
 
     if (!item) return null;
+
+    const presetButtons =
+        item.restock_presets && item.restock_presets.length > 0
+            ? item.restock_presets
+            : item.restock_amount > 0
+            ? [item.restock_amount]
+            : [];
 
     const parsed = parseFloat(customAmount);
     const canSubmitCustom = !Number.isNaN(parsed) && parsed > 0;
@@ -39,67 +47,84 @@ export function RestockDialog({ open, onOpenChange, item, onRestock }: Props) {
         onOpenChange(false);
     };
 
-    const currentLeft = Math.max(0, item.quantity_left);
-    const previewTotal = canSubmitCustom ? currentLeft + parsed : null;
+    const step = (delta: number) => {
+        const base = Number.isNaN(parsed) ? 0 : parsed;
+        const next = Math.max(1, base + delta);
+        setCustomAmount(String(next));
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Restock {item.name}</DialogTitle>
+                    <DialogTitle>
+                        Restock {item.emoji ? `${item.emoji} ` : ''}
+                        {item.name}
+                    </DialogTitle>
                     <DialogDescription>
-                        Currently {currentLeft} left. Add what you bought.
+                        Currently {Math.max(0, item.quantity_left)} left. Add what you bought.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col gap-4">
-                    {defaultAmount > 0 && (
-                        <Button
-                            size="lg"
-                            onClick={() => submit(defaultAmount)}
-                            className="w-full"
-                        >
-                            <RotateCcw className="mr-2 h-4 w-4" />
-                            Add default (+{defaultAmount}) → {currentLeft + defaultAmount}
-                        </Button>
+                <div className="flex flex-col gap-5">
+                    {presetButtons.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            {presetButtons.map((amount) => (
+                                <Button
+                                    key={amount}
+                                    size="lg"
+                                    onClick={() => submit(amount)}
+                                    className="w-full"
+                                >
+                                    Add {amount}
+                                </Button>
+                            ))}
+                        </div>
                     )}
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                         <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                             Custom amount
                         </span>
-                        <div className="flex items-stretch gap-2">
+                        <div className="flex items-center justify-center gap-3">
+                            <RoundIconButton
+                                aria-label="Decrease amount"
+                                onClick={() => step(-1)}
+                                disabled={canSubmitCustom && parsed <= 1}
+                            >
+                                <Minus className="h-4 w-4" />
+                            </RoundIconButton>
                             <input
                                 type="number"
                                 inputMode="decimal"
-                                min="0"
+                                min="1"
                                 value={customAmount}
                                 onChange={(e) => setCustomAmount(e.target.value)}
                                 aria-label="Custom restock amount"
-                                autoFocus
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && canSubmitCustom) {
                                         e.preventDefault();
                                         submit(parsed);
                                     }
                                 }}
-                                className="h-11 flex-1 min-w-0 rounded-xl border border-border bg-background px-4 text-base font-medium tracking-tight outline-none transition-colors focus:border-foreground"
+                                className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center font-mono text-lg font-medium tracking-tight outline-none transition-colors focus:border-foreground"
                             />
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                onClick={() => canSubmitCustom && submit(parsed)}
-                                disabled={!canSubmitCustom}
-                                className="shrink-0"
+                            <RoundIconButton
+                                aria-label="Increase amount"
+                                onClick={() => step(1)}
                             >
-                                Add
-                            </Button>
+                                <Plus className="h-4 w-4" />
+                            </RoundIconButton>
                         </div>
-                        <p className="text-xs italic text-muted-foreground/70">
-                            {previewTotal !== null
-                                ? `${currentLeft} + ${parsed} = ${previewTotal}`
-                                : 'Enter a quantity to add'}
-                        </p>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => canSubmitCustom && submit(parsed)}
+                            disabled={!canSubmitCustom}
+                            className="w-full"
+                        >
+                            Add {canSubmitCustom ? parsed : ''}
+                        </Button>
                     </div>
                 </div>
             </DialogContent>

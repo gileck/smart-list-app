@@ -43,7 +43,14 @@ export function ItemRow({ item, onTap, onRestock, onEdit, onDelete }: Props) {
             </div>
 
             <div className="min-w-0 flex-1">
-                <div className="truncate text-base font-medium tracking-tight">{item.name}</div>
+                <div className="flex items-center gap-1.5 truncate text-base font-medium tracking-tight">
+                    {item.emoji && (
+                        <span aria-hidden className="shrink-0 text-lg leading-none">
+                            {item.emoji}
+                        </span>
+                    )}
+                    <span className="truncate">{item.name}</span>
+                </div>
                 <div className="mt-0.5 truncate text-[13px] text-muted-foreground">
                     {item.quantity_left} left · {item.consumption_per_day}/day
                 </div>

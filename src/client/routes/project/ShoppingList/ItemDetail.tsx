@@ -90,8 +90,13 @@ export function ItemDetail() {
                     <RoundIconButton aria-label="Back" onClick={() => navigate(listPath)}>
                         <ChevronLeft className="h-4 w-4" />
                     </RoundIconButton>
-                    <h1 className="flex-1 truncate text-[17px] font-semibold tracking-tight">
-                        {item.name}
+                    <h1 className="flex flex-1 items-center gap-1.5 truncate text-[17px] font-semibold tracking-tight">
+                        {item.emoji && (
+                            <span aria-hidden className="shrink-0 leading-none">
+                                {item.emoji}
+                            </span>
+                        )}
+                        <span className="truncate">{item.name}</span>
                     </h1>
                     <RoundIconButton
                         aria-label="Edit"
@@ -110,8 +115,13 @@ export function ItemDetail() {
                     <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         days remaining
                     </div>
-                    <div className="mt-3 text-[28px] font-semibold tracking-tight">
-                        {item.name}
+                    <div className="mt-3 flex items-center gap-2 text-[28px] font-semibold tracking-tight">
+                        {item.emoji && (
+                            <span aria-hidden className="leading-none">
+                                {item.emoji}
+                            </span>
+                        )}
+                        <span>{item.name}</span>
                     </div>
                     <StatusBadge label={meta.label} tone={meta.tone} className="mt-3" />
                 </section>
