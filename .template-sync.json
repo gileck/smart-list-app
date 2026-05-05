@@ -4,5 +4,7 @@
   "templateLocalPath": "../app-template-ai",
   "lastSyncCommit": "f72070680c2f46c4d4eb3de268a28e118e51f65e",
   "lastSyncDate": "2026-05-05T08:37:50.313Z",
-  "projectOverrides": []
+  "projectOverrides": [
+    "scripts/template/generate-icons.ts"
+  ]
 }

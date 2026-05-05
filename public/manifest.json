@@ -1,11 +1,11 @@
 {
-  "name": "App Template AI",
-  "short_name": "App Template",
-  "description": "A custom SPA application with PWA capabilities",
+  "name": "Smart List",
+  "short_name": "Smart List",
+  "description": "Track shopping items and recurring chores",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#0A84FF",
   "orientation": "portrait",
   "icons": [
     {

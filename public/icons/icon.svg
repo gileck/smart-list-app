@@ -1,29 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0A84FF;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#007AFF;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#5856D6;stop-opacity:1" />
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30D158"/>
+      <stop offset="1" stop-color="#0A84FF"/>
     </linearGradient>
-    <linearGradient id="highlight" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3);stop-opacity:1" />
-      <stop offset="40%" style="stop-color:rgba(255,255,255,0.05);stop-opacity:1" />
-      <stop offset="100%" style="stop-color:rgba(255,255,255,0);stop-opacity:1" />
+    <linearGradient id="topHi" x1="0" y1="0" x2="0" y2="230.4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" style="stop-color:rgba(255,255,255,0.4);stop-opacity:1" />
-      <stop offset="100%" style="stop-color:rgba(255,255,255,0);stop-opacity:1" />
-    </radialGradient>
   </defs>
-  
-  <!-- Background -->
-  <rect x="0" y="0" width="512" height="512" rx="113" ry="113" fill="url(#bgGradient)"/>
-  
-  <!-- Highlight overlay -->
-  <rect x="0" y="0" width="512" height="512" rx="113" ry="113" fill="url(#highlight)"/>
-  
-  <!-- Center design element - modern dot/orb -->
-  <circle cx="256" cy="256" r="112.64" fill="rgba(255,255,255,0.95)"/>
-  <circle cx="256" cy="233.472" r="33.792" fill="url(#bgGradient)" opacity="0.6"/>
+
+  <rect x="0" y="0" width="512" height="512" fill="url(#bg)"/>
+  <rect x="0" y="0" width="512" height="230.4" fill="url(#topHi)"/>
+
+  <g transform="rotate(-7 220.16 220.16)">
+    <rect x="92.16" y="71.68" width="256" height="296.96" rx="35.84" ry="35.84" fill="#ffffff" fill-opacity="0.55"/>
+  </g>
+
+  <rect x="133.12000000000003" y="107.52000000000001" width="296.96" height="337.92" rx="46.08" ry="46.08" fill="#ffffff"/>
+
+  <circle cx="182.27200000000005" cy="200.70400000000004" r="13.312" fill="#22C55E"/>
+  <rect x="210.94400000000007" y="190.46400000000003" width="183.29599999999994" height="20.48" rx="10.24" ry="10.24" fill="#E5E7EB"/>
+
+  <circle cx="182.27200000000005" cy="276.48" r="13.312" fill="#F59E0B"/>
+  <rect x="210.94400000000007" y="266.24" width="142.97087999999997" height="20.48" rx="10.24" ry="10.24" fill="#E5E7EB"/>
+
+  <circle cx="182.27200000000005" cy="352.25600000000003" r="13.312" fill="#9CA3AF"/>
+  <rect x="210.94400000000007" y="342.016" width="100.81279999999997" height="20.48" rx="10.24" ry="10.24" fill="#E5E7EB"/>
 </svg>

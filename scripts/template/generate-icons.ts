@@ -1,9 +1,12 @@
 /**
- * Generate modern iOS-style blue gradient PWA icons
- * 
- * Run: npx tsx scripts/generate-icons.ts
- * 
- * Requires: npm install sharp --save-dev
+ * Generate Smart List PWA icons.
+ *
+ * Concept: layered "list" cards on a green→blue diagonal gradient. The front
+ * card carries three rows whose bullets use the app's status palette
+ * (green = stocked / on-track, amber = buy-soon / due-soon, gray = ok).
+ *
+ * Run: yarn generate-icons
+ * Requires: sharp
  */
 
 import sharp from 'sharp';
@@ -12,46 +15,76 @@ import fs from 'fs';
 
 const ICONS_DIR = path.join(process.cwd(), 'public', 'icons');
 
-// iOS PWA icon sizes
 const ICON_SIZES = [72, 96, 128, 144, 152, 167, 180, 192, 384, 512];
 
-/**
- * Create an SVG with iOS-style blue gradient and a modern minimal design
- */
 function createIconSvg(size: number): string {
-  const cornerRadius = Math.round(size * 0.22);
-  const centerX = size / 2;
-  const centerY = size / 2;
-  const circleRadius = size * 0.22;
-  
+  const F = size;
+
+  // Back card (rotated, behind the front card)
+  const backW = F * 0.50;
+  const backH = F * 0.58;
+  const backCx = F * 0.43;
+  const backCy = F * 0.43;
+  const backRx = F * 0.07;
+
+  // Front card (foreground)
+  const frontW = F * 0.58;
+  const frontH = F * 0.66;
+  const frontCx = F * 0.55;
+  const frontCy = F * 0.54;
+  const frontRx = F * 0.09;
+  const frontLeft = frontCx - frontW / 2;
+  const frontRight = frontCx + frontW / 2;
+  const frontTop = frontCy - frontH / 2;
+
+  // Three rows on the front card, vertically centered
+  const rowH = F * 0.04;
+  const rowGap = F * 0.108;
+  const rowsTotal = 3 * rowH + 2 * rowGap;
+  const rowsTopY = frontTop + (frontH - rowsTotal) / 2;
+  const bulletR = F * 0.026;
+  const rowPaddingX = F * 0.07;
+  const bulletX = frontLeft + rowPaddingX + bulletR;
+  const pillX = bulletX + bulletR + F * 0.03;
+  const pillMaxRight = frontRight - rowPaddingX;
+  const pillW1 = pillMaxRight - pillX;
+  const pillW2 = pillW1 * 0.78;
+  const pillW3 = pillW1 * 0.55;
+  const pillRy = rowH / 2;
+
+  const rowY = (i: number) => rowsTopY + i * (rowH + rowGap);
+  const bulletCy = (i: number) => rowY(i) + rowH / 2;
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0A84FF;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#007AFF;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#5856D6;stop-opacity:1" />
+    <linearGradient id="bg" x1="0" y1="0" x2="${F}" y2="${F}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30D158"/>
+      <stop offset="1" stop-color="#0A84FF"/>
     </linearGradient>
-    <linearGradient id="highlight" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3);stop-opacity:1" />
-      <stop offset="40%" style="stop-color:rgba(255,255,255,0.05);stop-opacity:1" />
-      <stop offset="100%" style="stop-color:rgba(255,255,255,0);stop-opacity:1" />
+    <linearGradient id="topHi" x1="0" y1="0" x2="0" y2="${F * 0.45}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" style="stop-color:rgba(255,255,255,0.4);stop-opacity:1" />
-      <stop offset="100%" style="stop-color:rgba(255,255,255,0);stop-opacity:1" />
-    </radialGradient>
   </defs>
-  
-  <!-- Background -->
-  <rect x="0" y="0" width="${size}" height="${size}" rx="${cornerRadius}" ry="${cornerRadius}" fill="url(#bgGradient)"/>
-  
-  <!-- Highlight overlay -->
-  <rect x="0" y="0" width="${size}" height="${size}" rx="${cornerRadius}" ry="${cornerRadius}" fill="url(#highlight)"/>
-  
-  <!-- Center design element - modern dot/orb -->
-  <circle cx="${centerX}" cy="${centerY}" r="${circleRadius}" fill="rgba(255,255,255,0.95)"/>
-  <circle cx="${centerX}" cy="${centerY - circleRadius * 0.2}" r="${circleRadius * 0.3}" fill="url(#bgGradient)" opacity="0.6"/>
+
+  <rect x="0" y="0" width="${F}" height="${F}" fill="url(#bg)"/>
+  <rect x="0" y="0" width="${F}" height="${F * 0.45}" fill="url(#topHi)"/>
+
+  <g transform="rotate(-7 ${backCx} ${backCy})">
+    <rect x="${backCx - backW / 2}" y="${backCy - backH / 2}" width="${backW}" height="${backH}" rx="${backRx}" ry="${backRx}" fill="#ffffff" fill-opacity="0.55"/>
+  </g>
+
+  <rect x="${frontLeft}" y="${frontTop}" width="${frontW}" height="${frontH}" rx="${frontRx}" ry="${frontRx}" fill="#ffffff"/>
+
+  <circle cx="${bulletX}" cy="${bulletCy(0)}" r="${bulletR}" fill="#22C55E"/>
+  <rect x="${pillX}" y="${rowY(0)}" width="${pillW1}" height="${rowH}" rx="${pillRy}" ry="${pillRy}" fill="#E5E7EB"/>
+
+  <circle cx="${bulletX}" cy="${bulletCy(1)}" r="${bulletR}" fill="#F59E0B"/>
+  <rect x="${pillX}" y="${rowY(1)}" width="${pillW2}" height="${rowH}" rx="${pillRy}" ry="${pillRy}" fill="#E5E7EB"/>
+
+  <circle cx="${bulletX}" cy="${bulletCy(2)}" r="${bulletR}" fill="#9CA3AF"/>
+  <rect x="${pillX}" y="${rowY(2)}" width="${pillW3}" height="${rowH}" rx="${pillRy}" ry="${pillRy}" fill="#E5E7EB"/>
 </svg>`;
 }
 
