@@ -1,11 +1,11 @@
 {
-  "name": "smart-list-app",
-  "short_name": "smart-list-app",
-  "description": "Smart List",
+  "name": "Smart List",
+  "short_name": "Smart List",
+  "description": "Track shopping items and recurring chores",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#0A84FF",
   "orientation": "portrait",
   "icons": [
     {

@@ -43,9 +43,9 @@ function formatNumber(n: number): string {
 }
 
 function formatChoreDays(d: number): string {
-    if (d < 0) return `overdue by ${-d} day${d === -1 ? '' : 's'}`;
-    if (d === 0) return 'due today';
-    return `due in ${d} day${d === 1 ? '' : 's'}`;
+    if (d < 0) return `overdue ${-d}d`;
+    if (d === 0) return 'today';
+    return `${d}d`;
 }
 
 export interface BuiltMessage {
@@ -77,13 +77,9 @@ export async function buildMessage(
         const lines = matches.map((i) => {
             const days = Math.max(0, Math.ceil(shoppingDaysLeft(i)));
             const emoji = i.emoji ? `${i.emoji} ` : '';
-            return `${emoji}${i.name} — ${formatNumber(i.quantityLeft)} left (${days} day${days === 1 ? '' : 's'})`;
+            return `${emoji}${i.name} — ${formatNumber(i.quantityLeft)} left, ${days}d`;
         });
-        return {
-            title,
-            body: `${list.name} update:\n${lines.join('\n')}`,
-            isEmpty: false,
-        };
+        return { title, body: lines.join('\n'), isEmpty: false };
     }
 
     if (config.filter.type === 'chore_due_within' && list.type === 'chore') {
@@ -97,13 +93,9 @@ export async function buildMessage(
             return { title, body: '', isEmpty: true };
         }
         const lines = matches.map(
-            ({ chore, daysUntil }) => `• ${chore.name} (${formatChoreDays(daysUntil)})`
+            ({ chore, daysUntil }) => `• ${chore.name} — ${formatChoreDays(daysUntil)}`
         );
-        return {
-            title,
-            body: `${list.name}:\n${lines.join('\n')}`,
-            isEmpty: false,
-        };
+        return { title, body: lines.join('\n'), isEmpty: false };
     }
 
     return {
@@ -144,10 +136,9 @@ export async function dispatchNotification(
         return { sentChannels: [], failures: [], isEmpty: true };
     }
 
-    const prefix = options.testPrefix ?? '';
-    const body = built.isEmpty ? `${built.title}: nothing to report ✓` : built.body;
-    const finalBody = prefix + body;
-    const finalTitle = prefix + built.title;
+    const titlePrefix = options.testPrefix ?? '';
+    const finalTitle = `${titlePrefix}${built.title}`.trim();
+    const finalBody = built.isEmpty ? 'All caught up ✓' : built.body;
     const userIdStr = userIdObj.toString();
 
     const listIdStr = toStringId(
@@ -180,7 +171,9 @@ export async function dispatchNotification(
                 });
             }
         } else if (channel === 'telegram') {
-            const telegramBody = `${finalBody}\n\n👉 ${fullUrl}`;
+            // Telegram doesn't surface a title separately, so include it
+            // in the body. URL is appended as a tappable line.
+            const telegramBody = `${finalTitle}\n\n${finalBody}\n\n👉 ${fullUrl}`;
             const result = await sendTelegramNotificationToUser(userIdStr, telegramBody);
             if (result.success) sentChannels.push(channel);
             else failures.push({ channel, error: result.error ?? 'telegram failed' });

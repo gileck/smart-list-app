@@ -5,6 +5,7 @@
   "lastSyncCommit": "a102e29f0d8eff274ee9bb2eb2433467fa0ebf83",
   "lastSyncDate": "2026-05-08T06:53:25.297Z",
   "projectOverrides": [
-    "scripts/template/generate-icons.ts"
+    "scripts/template/generate-icons.ts",
+    "public/manifest.json"
   ]
 }

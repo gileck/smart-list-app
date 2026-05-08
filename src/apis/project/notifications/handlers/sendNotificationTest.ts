@@ -43,7 +43,7 @@ export const sendNotificationTest = async (
             // only the fields it reads.
             ephemeralConfig as Parameters<typeof dispatchNotification>[0],
             userId,
-            { allowEmpty: true, testPrefix: '(Test) ' }
+            { allowEmpty: true, testPrefix: '[Test] ' }
         );
         if ('error' in result) return { error: result.error };
 

@@ -23,7 +23,7 @@ export const sendNotificationNow = async (
 
         const result = await dispatchNotification(config, userId, {
             allowEmpty: true,
-            testPrefix: '(Test) ',
+            testPrefix: '[Test] ',
         });
         if ('error' in result) return { error: result.error };
 
