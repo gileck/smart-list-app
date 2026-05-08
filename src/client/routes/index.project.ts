@@ -29,6 +29,11 @@ import {
   ItemDetailView,
   EditItemView,
 } from './project/listDispatcher';
+import {
+  Notifications,
+  AddNotificationRoute,
+  EditNotificationRoute,
+} from './project/Notifications';
 
 /**
  * Project route definitions.
@@ -46,6 +51,11 @@ export const projectRoutes: Routes = {
   '/lists/:listId/items/new': AddItemView,
   '/lists/:listId/items/:itemId': ItemDetailView,
   '/lists/:listId/items/:itemId/edit': EditItemView,
+
+  // Notifications
+  '/notifications': Notifications,
+  '/notifications/new': AddNotificationRoute,
+  '/notifications/:notificationId/edit': EditNotificationRoute,
 
   // Template demo routes (kept for reference)
   '/welcome': Welcome,

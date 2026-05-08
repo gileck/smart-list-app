@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { toQueryId } from '@/server/template/utils';
-import { smartLists, shoppingItems, chores } from '@/server/database';
+import { smartLists, shoppingItems, chores, notifications } from '@/server/database';
 import {
     API_DELETE_LIST,
     type ApiHandlerContext,
@@ -20,6 +20,7 @@ export const deleteList = async (
         await Promise.all([
             shoppingItems.deleteItemsByListId(request.listId, userId),
             chores.deleteChoresByListId(request.listId, userId),
+            notifications.removeByListId(request.listId, userId),
         ]);
         const ok = await smartLists.deleteList(request.listId, userId);
         if (!ok) return { error: 'List not found' };

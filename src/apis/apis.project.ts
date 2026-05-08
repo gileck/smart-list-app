@@ -11,11 +11,13 @@ import { todosApiHandlers } from "./project/todos/server";
 import { listsApiHandlers } from "./project/lists/server";
 import { shoppingItemsApiHandlers } from "./project/shopping-items/server";
 import { choresApiHandlers } from "./project/chores/server";
+import { notificationsApiHandlers } from "./project/notifications/server";
 
 export const projectApiHandlers = mergeApiHandlers(
   chatApiHandlers,
   todosApiHandlers,
   listsApiHandlers,
   shoppingItemsApiHandlers,
-  choresApiHandlers
+  choresApiHandlers,
+  notificationsApiHandlers
 );

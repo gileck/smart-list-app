@@ -12,4 +12,5 @@
 export * from './project/lists';
 export * from './project/smart-list';
 export * from './project/chores';
+export * from './project/notifications';
 
