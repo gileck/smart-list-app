@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { toQueryId } from '@/server/template/utils';
-import { shoppingItems } from '@/server/database';
+import { restockEvents, shoppingItems } from '@/server/database';
 import {
     API_RESTOCK_ITEM,
     type ApiHandlerContext,
@@ -24,12 +24,25 @@ export const restockItem = async (
         const existing = await shoppingItems.findItemById(request.itemId, userId);
         if (!existing) return { error: 'Item not found' };
 
+        const now = new Date();
+        const quantityLeftBefore = Math.max(0, existing.quantityLeft);
         const updated = await shoppingItems.updateItem(request.itemId, userId, {
-            quantityLeft: Math.max(0, existing.quantityLeft) + request.amount,
+            quantityLeft: quantityLeftBefore + request.amount,
             lastConsumptionAt: startOfToday(),
-            updatedAt: new Date(),
+            updatedAt: now,
         });
         if (!updated) return { error: 'Item not found' };
+
+        // Record the event so the user can later see real-vs-expected usage.
+        await restockEvents.create({
+            userId,
+            itemId: existing._id,
+            listId: existing.listId,
+            amount: request.amount,
+            quantityLeftBefore,
+            restockedAt: now,
+        });
+
         return { item: toItemClient(updated) };
     } catch (error) {
         console.error('restockItem error', error);

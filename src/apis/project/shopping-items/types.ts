@@ -1,4 +1,5 @@
 import type { ShoppingItemClient } from '@/server/database/collections/project/shopping-items/types';
+import type { RestockEventClient } from '@/server/database/collections/project/restock-events/types';
 
 export interface GetItemsRequest {
     _?: never;
@@ -49,6 +50,16 @@ export interface RestockItemRequest {
 }
 export interface RestockItemResponse {
     item?: ShoppingItemClient;
+    error?: string;
+}
+
+export interface GetRestockHistoryRequest {
+    itemId: string;
+}
+export interface GetRestockHistoryResponse {
+    events?: RestockEventClient[];
+    /** Observed daily-use rate from the gap between consecutive restocks. */
+    observedPerDay?: number | null;
     error?: string;
 }
 

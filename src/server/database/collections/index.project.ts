@@ -16,3 +16,4 @@ export * as smartLists from './project/lists';
 export * as shoppingItems from './project/shopping-items';
 export * as chores from './project/chores';
 export * as notifications from './project/notifications';
+export * as restockEvents from './project/restock-events';

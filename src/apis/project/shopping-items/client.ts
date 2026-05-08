@@ -6,6 +6,7 @@ import {
     API_UPDATE_ITEM,
     API_DELETE_ITEM,
     API_RESTOCK_ITEM,
+    API_GET_RESTOCK_HISTORY,
 } from './index';
 import {
     GetItemsRequest,
@@ -18,6 +19,8 @@ import {
     DeleteItemResponse,
     RestockItemRequest,
     RestockItemResponse,
+    GetRestockHistoryRequest,
+    GetRestockHistoryResponse,
 } from './types';
 
 export const getItems = async (
@@ -39,3 +42,8 @@ export const deleteItem = async (
 export const restockItem = async (
     params: RestockItemRequest
 ): Promise<CacheResult<RestockItemResponse>> => apiClient.post(API_RESTOCK_ITEM, params);
+
+export const getRestockHistory = async (
+    params: GetRestockHistoryRequest
+): Promise<CacheResult<GetRestockHistoryResponse>> =>
+    apiClient.call(API_GET_RESTOCK_HISTORY, params);

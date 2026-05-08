@@ -3,15 +3,21 @@ import {
     createItem as createItemApi,
     deleteItem as deleteItemApi,
     getItems,
+    getRestockHistory,
     restockItem as restockItemApi,
     updateItem as updateItemApi,
 } from '@/apis/project/shopping-items/client';
-import type { GetItemsResponse } from '@/apis/project/shopping-items/types';
+import type {
+    GetItemsResponse,
+    GetRestockHistoryResponse,
+} from '@/apis/project/shopping-items/types';
 import { useQueryDefaults } from '@/client/query/defaults';
 import { generateId } from '@/client/utils/id';
 import type { SmartListItem } from './types';
 
 export const itemsQueryKey = ['shopping-items'] as const;
+export const restockHistoryQueryKey = (itemId: string) =>
+    ['shopping-items', itemId, 'restock-history'] as const;
 
 export function useShoppingItems(options?: { enabled?: boolean }) {
     const queryDefaults = useQueryDefaults();
@@ -199,7 +205,29 @@ export function useRestockShoppingItem() {
         onError: (_err, _vars, context) => {
             if (context?.previous) queryClient.setQueryData(itemsQueryKey, context.previous);
         },
-        onSuccess: () => {},
+        onSuccess: (_data, variables) => {
+            // Restock history is server-derived (observedPerDay computed
+            // from the freshly-appended event); invalidate so the detail
+            // page picks up the new event + recomputed rate. Items cache
+            // stays optimistic.
+            queryClient.invalidateQueries({
+                queryKey: restockHistoryQueryKey(variables.itemId),
+            });
+        },
         onSettled: () => {},
+    });
+}
+
+export function useRestockHistory(itemId: string, options?: { enabled?: boolean }) {
+    const queryDefaults = useQueryDefaults();
+    return useQuery({
+        queryKey: restockHistoryQueryKey(itemId),
+        queryFn: async (): Promise<GetRestockHistoryResponse> => {
+            const response = await getRestockHistory({ itemId });
+            if (response.data?.error) throw new Error(response.data.error);
+            return response.data;
+        },
+        enabled: (options?.enabled ?? true) && !!itemId,
+        ...queryDefaults,
     });
 }

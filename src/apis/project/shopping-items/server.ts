@@ -6,12 +6,14 @@ import {
     API_UPDATE_ITEM,
     API_DELETE_ITEM,
     API_RESTOCK_ITEM,
+    API_GET_RESTOCK_HISTORY,
 } from './index';
 import { getItems } from './handlers/getItems';
 import { createItem } from './handlers/createItem';
 import { updateItem } from './handlers/updateItem';
 import { deleteItem } from './handlers/deleteItem';
 import { restockItem } from './handlers/restockItem';
+import { getRestockHistory } from './handlers/getRestockHistory';
 
 export const shoppingItemsApiHandlers = {
     [API_GET_ITEMS]: { process: getItems },
@@ -19,4 +21,5 @@ export const shoppingItemsApiHandlers = {
     [API_UPDATE_ITEM]: { process: updateItem },
     [API_DELETE_ITEM]: { process: deleteItem },
     [API_RESTOCK_ITEM]: { process: restockItem },
+    [API_GET_RESTOCK_HISTORY]: { process: getRestockHistory },
 };

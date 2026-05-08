@@ -7,6 +7,7 @@ import {
     daysLeftDisplay,
     status,
     useDeleteShoppingItem,
+    useRestockHistory,
     useRestockShoppingItem,
     useRouter,
     useShoppingItems,
@@ -39,6 +40,9 @@ export function ItemDetail() {
     const { data: itemsData, isLoading } = useShoppingItems();
     const restockMutation = useRestockShoppingItem();
     const deleteMutation = useDeleteShoppingItem();
+    const { data: historyData } = useRestockHistory(itemId ?? '', {
+        enabled: !!itemId,
+    });
 
     const item = itemsData?.items?.find((i) => i.id === itemId) ?? null;
 
@@ -143,6 +147,12 @@ export function ItemDetail() {
                     />
                 </dl>
 
+                <RestockHistorySection
+                    events={historyData?.events ?? []}
+                    observedPerDay={historyData?.observedPerDay ?? null}
+                    configuredPerDay={item.consumption_per_day}
+                />
+
                 <div className="flex flex-col gap-2.5 border-t border-border px-5 py-5">
                     <Button size="lg" onClick={() => setRestockOpen(true)} className="w-full">
                         <RotateCcw className="mr-2 h-4 w-4" />
@@ -185,5 +195,95 @@ export function ItemDetail() {
                 onRestock={handleRestockSubmit}
             />
         </div>
+    );
+}
+
+type RestockEvent = {
+    id: string;
+    amount: number;
+    quantity_left_before?: number;
+    restocked_at: number;
+};
+
+function formatNumber(n: number): string {
+    if (Number.isInteger(n)) return String(n);
+    return n.toFixed(1).replace(/\.0$/, '');
+}
+
+function formatRelativeDay(ts: number): string {
+    const now = Date.now();
+    const diffDays = Math.floor((now - ts) / (24 * 60 * 60 * 1000));
+    if (diffDays <= 0) return 'today';
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    return new Date(ts).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+    });
+}
+
+function RestockHistorySection({
+    events,
+    observedPerDay,
+    configuredPerDay,
+}: {
+    events: RestockEvent[];
+    observedPerDay: number | null;
+    configuredPerDay: number;
+}) {
+    if (events.length === 0) return null;
+
+    const recent = events.slice(0, 5);
+    const drift =
+        observedPerDay !== null && configuredPerDay > 0
+            ? Math.abs(observedPerDay - configuredPerDay) / configuredPerDay
+            : 0;
+    const showInsight = observedPerDay !== null && drift >= 0.2;
+    const direction =
+        observedPerDay !== null && observedPerDay > configuredPerDay ? 'faster' : 'slower';
+
+    return (
+        <section className="border-t border-border px-5 py-4">
+            <div className="mb-3 flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Restock history
+                </span>
+                {observedPerDay !== null && (
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                        observed {formatNumber(observedPerDay)}/day
+                    </span>
+                )}
+            </div>
+
+            {showInsight && observedPerDay !== null && (
+                <div className="mb-3 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-[13px] text-foreground">
+                    Looks like you actually use{' '}
+                    <span className="font-semibold">{formatNumber(observedPerDay)}/day</span>
+                    {' — '}
+                    {direction} than the configured {formatNumber(configuredPerDay)}/day. Edit
+                    the item to update the rate.
+                </div>
+            )}
+
+            <ul className="flex flex-col gap-1.5">
+                {recent.map((ev) => (
+                    <li
+                        key={ev.id}
+                        className="flex items-center justify-between text-[13px]"
+                    >
+                        <span className="font-medium">+{formatNumber(ev.amount)}</span>
+                        <span className="text-muted-foreground">
+                            {formatRelativeDay(ev.restocked_at)}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+            {events.length > recent.length && (
+                <p className="mt-2 text-[11px] text-muted-foreground/70">
+                    + {events.length - recent.length} earlier
+                </p>
+            )}
+        </section>
     );
 }
