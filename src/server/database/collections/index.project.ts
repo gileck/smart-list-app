@@ -10,3 +10,8 @@
 
 // Template demo collections (not synced to child projects):
 export * as todos from './project/todos';
+
+// Smart-list collections
+export * as smartLists from './project/lists';
+export * as shoppingItems from './project/shopping-items';
+export * as chores from './project/chores';

@@ -4,9 +4,10 @@ import {
     choreStatus,
     compareChoresUrgency,
     isChoreAttention,
-    useBootstrapLists,
-    useChoresStore,
-    useListsStore,
+    useChores,
+    useDeleteChore,
+    useLists,
+    useMarkChoreDone,
     useRouter,
     type Chore,
 } from '@/client/features';
@@ -25,12 +26,13 @@ export function ChoreListView() {
     const { navigate, routeParams } = useRouter();
     const listId = routeParams.listId;
 
-    useBootstrapLists();
+    const { data: listsData } = useLists();
+    const { data: choresData, isLoading } = useChores();
+    const markDoneMutation = useMarkChoreDone();
+    const deleteMutation = useDeleteChore();
 
-    const list = useListsStore((s) => s.lists.find((l) => l.id === listId) ?? null);
-    const chores = useChoresStore((s) => s.chores);
-    const markDone = useChoresStore((s) => s.markDone);
-    const deleteChore = useChoresStore((s) => s.deleteChore);
+    const list = listsData?.lists?.find((l) => l.id === listId) ?? null;
+    const chores = choresData?.chores ?? [];
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral confirm dialog target
     const [deleteTarget, setDeleteTarget] = useState<Chore | null>(null);
@@ -45,21 +47,34 @@ export function ChoreListView() {
         [listChores]
     );
 
-    if (!list) {
+    if (!list && !isLoading) {
         return <NotFoundCard message="List not found." onBack={() => navigate('/')} />;
     }
+    if (!list) return null;
 
     const handleMarkDone = (chore: Chore) => {
-        markDone(chore.id);
-        toast.success(`${chore.name} marked done`);
+        markDoneMutation.mutate(
+            { choreId: chore.id },
+            {
+                onSuccess: () => toast.success(`${chore.name} marked done`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to mark done'),
+            }
+        );
     };
 
     const handleDeleteConfirm = () => {
         if (!deleteTarget) return;
-        const name = deleteTarget.name;
-        deleteChore(deleteTarget.id);
+        const target = deleteTarget;
         setDeleteTarget(null);
-        toast.success(`${name} deleted`);
+        deleteMutation.mutate(
+            { choreId: target.id },
+            {
+                onSuccess: () => toast.success(`${target.name} deleted`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete'),
+            }
+        );
     };
 
     const itemPath = (c: Chore) => `/lists/${list.id}/items/${c.id}`;
@@ -118,7 +133,11 @@ export function ChoreListView() {
                         label="All Chores"
                         count={listChores.length}
                     />
-                    {listChores.length === 0 ? (
+                    {!choresData ? (
+                        <div className="px-5 pb-4 text-[13px] italic text-muted-foreground/70">
+                            Loading…
+                        </div>
+                    ) : listChores.length === 0 ? (
                         <EmptyCard
                             title="No chores yet"
                             hint="Tap + to add a recurring task."

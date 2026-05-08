@@ -6,8 +6,10 @@ import { toast } from '@/client/components/template/ui/toast';
 import {
     daysLeftDisplay,
     status,
+    useDeleteShoppingItem,
+    useRestockShoppingItem,
     useRouter,
-    useSmartListStore,
+    useShoppingItems,
     type ItemStatus,
 } from '@/client/features';
 import {
@@ -34,18 +36,18 @@ export function ItemDetail() {
     const itemId = routeParams.itemId;
     const listId = routeParams.listId;
 
-    const items = useSmartListStore((s) => s.items);
-    const restockBy = useSmartListStore((s) => s.restockBy);
-    const deleteItem = useSmartListStore((s) => s.deleteItem);
+    const { data: itemsData, isLoading } = useShoppingItems();
+    const restockMutation = useRestockShoppingItem();
+    const deleteMutation = useDeleteShoppingItem();
 
-    const item = items.find((i) => i.id === itemId) ?? null;
+    const item = itemsData?.items?.find((i) => i.id === itemId) ?? null;
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral confirm dialog
     const [confirmOpen, setConfirmOpen] = useState(false);
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral dialog
     const [restockOpen, setRestockOpen] = useState(false);
 
-    if (!item) {
+    if (!item && !isLoading) {
         return (
             <NotFoundCard
                 message="Item not found."
@@ -54,6 +56,7 @@ export function ItemDetail() {
             />
         );
     }
+    if (!item) return null;
 
     const listPath = `/lists/${item.listId}`;
     const isInfinite = item.consumption_per_day <= 0;
@@ -62,16 +65,31 @@ export function ItemDetail() {
     const display = daysLeftDisplay(item);
 
     const handleRestockSubmit = (amount: number) => {
-        restockBy(item.id, amount);
-        toast.success(`${item.name} restocked (${amount})`);
+        restockMutation.mutate(
+            { itemId: item.id, amount },
+            {
+                onSuccess: () => toast.success(`${item.name} restocked (${amount})`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to restock'),
+            }
+        );
     };
 
     const handleDelete = () => {
         const name = item.name;
-        deleteItem(item.id);
+        const id = item.id;
         setConfirmOpen(false);
-        toast.success(`${name} deleted`);
-        navigate(listPath);
+        deleteMutation.mutate(
+            { itemId: id },
+            {
+                onSuccess: () => {
+                    toast.success(`${name} deleted`);
+                    navigate(listPath);
+                },
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete'),
+            }
+        );
     };
 
     return (

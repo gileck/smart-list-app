@@ -1,14 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/client/components/template/ui/button';
 import { ConfirmDialog } from '@/client/components/template/ui/confirm-dialog';
 import { toast } from '@/client/components/template/ui/toast';
 import {
     LIST_TYPE_OPTIONS,
-    useChoresStore,
-    useListsStore,
+    useCreateListWithId,
+    useDeleteList,
+    useLists,
     useRouter,
-    useSmartListStore,
+    useUpdateList,
     type ListTypeId,
 } from '@/client/features';
 import { NotFoundCard, RoundIconButton } from '@/client/components/project/list-ui';
@@ -22,17 +23,12 @@ export function AddEditList({ mode }: Props) {
     const isEdit = mode === 'edit';
     const listId = isEdit ? routeParams.listId : null;
 
-    const lists = useListsStore((s) => s.lists);
-    const addList = useListsStore((s) => s.addList);
-    const renameList = useListsStore((s) => s.renameList);
-    const deleteList = useListsStore((s) => s.deleteList);
-    const deleteItemsForList = useSmartListStore((s) => s.deleteItemsForList);
-    const deleteChoresForList = useChoresStore((s) => s.deleteChoresForList);
+    const { data: listsData, isLoading } = useLists();
+    const createListMutation = useCreateListWithId();
+    const updateListMutation = useUpdateList();
+    const deleteListMutation = useDeleteList();
 
-    const editList = useMemo(
-        () => (listId ? lists.find((l) => l.id === listId) ?? null : null),
-        [lists, listId]
-    );
+    const editList = listId ? listsData?.lists?.find((l) => l.id === listId) ?? null : null;
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- text input
     const [name, setName] = useState(editList?.name ?? '');
@@ -56,29 +52,52 @@ export function AddEditList({ mode }: Props) {
         const trimmed = name.trim();
 
         if (isEdit && editList) {
-            renameList(editList.id, trimmed);
-            toast.success(`${trimmed} updated`);
-            navigate(`/lists/${editList.id}`);
+            updateListMutation.mutate(
+                { listId: editList.id, name: trimmed },
+                {
+                    onSuccess: () => {
+                        toast.success(`${trimmed} updated`);
+                        navigate(`/lists/${editList.id}`);
+                    },
+                    onError: (err) =>
+                        toast.error(err instanceof Error ? err.message : 'Failed to update list'),
+                }
+            );
             return;
         }
 
-        const newList = addList({ name: trimmed, type });
-        toast.success(`${trimmed} created`);
-        navigate(`/lists/${newList.id}`);
+        createListMutation.mutate(
+            { name: trimmed, type },
+            {
+                onSuccess: (created) => {
+                    toast.success(`${trimmed} created`);
+                    if (created?.id) navigate(`/lists/${created.id}`);
+                    else navigate('/lists');
+                },
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to create list'),
+            }
+        );
     };
 
     const handleDelete = () => {
         if (!editList) return;
-        const name = editList.name;
-        deleteItemsForList(editList.id);
-        deleteChoresForList(editList.id);
-        deleteList(editList.id);
+        const target = editList;
         setConfirmDeleteOpen(false);
-        toast.success(`${name} deleted`);
-        navigate('/');
+        deleteListMutation.mutate(
+            { listId: target.id },
+            {
+                onSuccess: () => {
+                    toast.success(`${target.name} deleted`);
+                    navigate('/');
+                },
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete list'),
+            }
+        );
     };
 
-    if (isEdit && !editList) {
+    if (isEdit && !editList && !isLoading) {
         return <NotFoundCard message="List not found." onBack={() => navigate('/')} />;
     }
 

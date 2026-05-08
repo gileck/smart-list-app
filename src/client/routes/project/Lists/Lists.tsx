@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Download, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
     choreStatus,
+    exportToJsonFile,
     getListType,
     isChoreAttention,
     status,
-    useBootstrapLists,
-    useChoresStore,
-    useListsStore,
+    useChores,
+    useDeleteList,
+    useLists,
     useRouter,
-    useSmartListStore,
+    useShoppingItems,
     type List,
 } from '@/client/features';
 import { ConfirmDialog } from '@/client/components/template/ui/confirm-dialog';
@@ -25,14 +27,16 @@ import { assertNever } from '@/client/features/project/_shared/assertNever';
 
 export function Lists() {
     const { navigate } = useRouter();
-    useBootstrapLists();
+    const queryClient = useQueryClient();
 
-    const lists = useListsStore((s) => s.lists);
-    const deleteList = useListsStore((s) => s.deleteList);
-    const items = useSmartListStore((s) => s.items);
-    const chores = useChoresStore((s) => s.chores);
-    const deleteItemsForList = useSmartListStore((s) => s.deleteItemsForList);
-    const deleteChoresForList = useChoresStore((s) => s.deleteChoresForList);
+    const { data: listsData, isLoading } = useLists();
+    const { data: itemsData } = useShoppingItems();
+    const { data: choresData } = useChores();
+    const deleteListMutation = useDeleteList();
+
+    const lists = listsData?.lists ?? [];
+    const items = itemsData?.items ?? [];
+    const chores = choresData?.chores ?? [];
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral confirm dialog target
     const [deleteTarget, setDeleteTarget] = useState<List | null>(null);
@@ -44,12 +48,23 @@ export function Lists() {
 
     const handleDelete = () => {
         if (!deleteTarget) return;
-        const name = deleteTarget.name;
-        deleteItemsForList(deleteTarget.id);
-        deleteChoresForList(deleteTarget.id);
-        deleteList(deleteTarget.id);
+        const target = deleteTarget;
         setDeleteTarget(null);
-        toast.success(`${name} deleted`);
+        deleteListMutation.mutate(
+            { listId: target.id },
+            {
+                onSuccess: () => toast.success(`${target.name} deleted`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete list'),
+            }
+        );
+    };
+
+    const handleExport = () => {
+        const { filename, counts } = exportToJsonFile(queryClient);
+        toast.success(
+            `Exported ${counts.lists} list${counts.lists !== 1 ? 's' : ''} to ${filename}`
+        );
     };
 
     const summaryFor = (
@@ -85,14 +100,25 @@ export function Lists() {
     return (
         <div className="mx-auto w-full max-w-md pb-24">
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                <header className="flex items-baseline gap-3 px-5 pt-5 pb-4">
+                <header className="flex items-center gap-2 px-5 pt-5 pb-4">
                     <h1 className="flex-1 text-[22px] font-semibold tracking-tight">My Lists</h1>
+                    <RoundIconButton
+                        aria-label="Export lists to JSON"
+                        title="Export lists to JSON"
+                        onClick={handleExport}
+                    >
+                        <Download className="h-4 w-4" />
+                    </RoundIconButton>
                     <span className="text-[13px] text-muted-foreground">
                         {lists.length} list{lists.length !== 1 ? 's' : ''}
                     </span>
                 </header>
 
-                {sortedLists.length === 0 ? (
+                {isLoading && lists.length === 0 ? (
+                    <div className="border-t border-border px-5 py-12 text-center text-sm text-muted-foreground/70">
+                        Loading…
+                    </div>
+                ) : sortedLists.length === 0 ? (
                     <div className="border-t border-border">
                         <EmptyCard
                             title="No lists yet"

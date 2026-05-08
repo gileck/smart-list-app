@@ -4,7 +4,9 @@ import {
     choreStatus,
     compareChoresUrgency,
     isChoreAttention,
-    useChoresStore,
+    useChores,
+    useDeleteChore,
+    useMarkChoreDone,
     useRouter,
     type Chore,
     type List,
@@ -18,9 +20,10 @@ type Props = { list: List };
 
 export function ChoreListBlock({ list }: Props) {
     const { navigate } = useRouter();
-    const chores = useChoresStore((s) => s.chores);
-    const markDone = useChoresStore((s) => s.markDone);
-    const deleteChore = useChoresStore((s) => s.deleteChore);
+    const { data: choresData } = useChores();
+    const markDoneMutation = useMarkChoreDone();
+    const deleteMutation = useDeleteChore();
+    const chores = choresData?.chores ?? [];
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral confirm dialog target
     const [deleteTarget, setDeleteTarget] = useState<Chore | null>(null);
@@ -36,16 +39,28 @@ export function ChoreListBlock({ list }: Props) {
     );
 
     const handleMarkDone = (chore: Chore) => {
-        markDone(chore.id);
-        toast.success(`${chore.name} marked done`);
+        markDoneMutation.mutate(
+            { choreId: chore.id },
+            {
+                onSuccess: () => toast.success(`${chore.name} marked done`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to mark done'),
+            }
+        );
     };
 
     const handleDeleteConfirm = () => {
         if (!deleteTarget) return;
-        const name = deleteTarget.name;
-        deleteChore(deleteTarget.id);
+        const target = deleteTarget;
         setDeleteTarget(null);
-        toast.success(`${name} deleted`);
+        deleteMutation.mutate(
+            { choreId: target.id },
+            {
+                onSuccess: () => toast.success(`${target.name} deleted`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete'),
+            }
+        );
     };
 
     const itemPath = (c: Chore) => `/lists/${list.id}/items/${c.id}`;
@@ -89,7 +104,11 @@ export function ChoreListBlock({ list }: Props) {
                     label="All Chores"
                     count={listChores.length}
                 />
-                {listChores.length === 0 ? (
+                {!choresData ? (
+                    <div className="px-5 pb-4 text-[13px] italic text-muted-foreground/70">
+                        Loading…
+                    </div>
+                ) : listChores.length === 0 ? (
                     <div className="px-5 pb-4 text-[13px] italic text-muted-foreground/70">
                         No chores yet.
                     </div>

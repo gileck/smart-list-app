@@ -1,4 +1,13 @@
 export type { SmartListItem, ItemStatus } from './types';
-export type { NewItemInput, EditItemInput } from './store';
-export { useSmartListStore } from './store';
+export {
+    itemsQueryKey,
+    useShoppingItems,
+    useCreateShoppingItem,
+    useCreateShoppingItemWithId,
+    useUpdateShoppingItem,
+    useDeleteShoppingItem,
+    useRestockShoppingItem,
+    type CreateItemInput,
+    type UpdateItemInput,
+} from './hooks';
 export { daysLeft, daysLeftDisplay, status, compareUrgency } from './utils';

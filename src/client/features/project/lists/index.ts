@@ -1,5 +1,12 @@
 export type { List, ListTypeId } from './types';
-export type { NewListInput } from './store';
-export { useListsStore, DEFAULT_LIST_ID, getDefaultList } from './store';
+export {
+    listsQueryKey,
+    useLists,
+    useCreateList,
+    useCreateListWithId,
+    useUpdateList,
+    useDeleteList,
+    type CreateListInput,
+} from './hooks';
 export { LIST_TYPES, LIST_TYPE_OPTIONS, getListType, type ListTypeDef } from './registry';
-export { bootstrapLists, useBootstrapLists } from './bootstrap';
+export { exportToJsonFile, buildExport, EXPORT_VERSION, type SmartListExport } from './exportImport';

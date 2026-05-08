@@ -3,8 +3,10 @@ import { Plus } from 'lucide-react';
 import {
     compareUrgency,
     status,
+    useDeleteShoppingItem,
+    useRestockShoppingItem,
     useRouter,
-    useSmartListStore,
+    useShoppingItems,
     type List,
     type SmartListItem,
 } from '@/client/features';
@@ -18,9 +20,10 @@ type Props = { list: List };
 
 export function ShoppingListBlock({ list }: Props) {
     const { navigate } = useRouter();
-    const items = useSmartListStore((s) => s.items);
-    const restockBy = useSmartListStore((s) => s.restockBy);
-    const deleteItem = useSmartListStore((s) => s.deleteItem);
+    const { data: itemsData } = useShoppingItems();
+    const restockMutation = useRestockShoppingItem();
+    const deleteMutation = useDeleteShoppingItem();
+    const items = itemsData?.items ?? [];
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral confirm dialog target
     const [deleteTarget, setDeleteTarget] = useState<SmartListItem | null>(null);
@@ -43,16 +46,29 @@ export function ShoppingListBlock({ list }: Props) {
 
     const handleRestockSubmit = (amount: number) => {
         if (!restockTarget) return;
-        restockBy(restockTarget.id, amount);
-        toast.success(`${restockTarget.name} restocked (${amount})`);
+        const target = restockTarget;
+        restockMutation.mutate(
+            { itemId: target.id, amount },
+            {
+                onSuccess: () => toast.success(`${target.name} restocked (${amount})`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to restock'),
+            }
+        );
     };
 
     const handleDeleteConfirm = () => {
         if (!deleteTarget) return;
-        const name = deleteTarget.name;
-        deleteItem(deleteTarget.id);
+        const target = deleteTarget;
         setDeleteTarget(null);
-        toast.success(`${name} deleted`);
+        deleteMutation.mutate(
+            { itemId: target.id },
+            {
+                onSuccess: () => toast.success(`${target.name} deleted`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete'),
+            }
+        );
     };
 
     const itemPath = (i: SmartListItem) => `/lists/${list.id}/items/${i.id}`;
@@ -96,7 +112,11 @@ export function ShoppingListBlock({ list }: Props) {
                     label="All Items"
                     count={sortedItems.length}
                 />
-                {sortedItems.length === 0 ? (
+                {!itemsData ? (
+                    <div className="px-5 pb-4 text-[13px] italic text-muted-foreground/70">
+                        Loading…
+                    </div>
+                ) : sortedItems.length === 0 ? (
                     <div className="px-5 pb-4 text-[13px] italic text-muted-foreground/70">
                         No items yet.
                     </div>

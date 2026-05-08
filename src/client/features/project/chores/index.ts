@@ -1,6 +1,15 @@
 export type { Chore, ChoreStatus } from './types';
-export type { NewChoreInput, EditChoreInput } from './store';
-export { useChoresStore } from './store';
+export {
+    choresQueryKey,
+    useChores,
+    useCreateChore,
+    useCreateChoreWithId,
+    useUpdateChore,
+    useDeleteChore,
+    useMarkChoreDone,
+    type CreateChoreInput,
+    type UpdateChoreInput,
+} from './hooks';
 export {
     daysUntilDue,
     status as choreStatus,

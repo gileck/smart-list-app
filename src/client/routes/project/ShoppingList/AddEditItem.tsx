@@ -1,8 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ChevronLeft, Plus, X } from 'lucide-react';
 import { Button } from '@/client/components/template/ui/button';
 import { toast } from '@/client/components/template/ui/toast';
-import { useRouter, useSmartListStore } from '@/client/features';
+import {
+    useCreateShoppingItemWithId,
+    useRouter,
+    useShoppingItems,
+    useUpdateShoppingItem,
+} from '@/client/features';
 import { NotFoundCard, RoundIconButton } from '@/client/components/project/list-ui';
 
 type Props = {
@@ -15,14 +20,11 @@ export function AddEditItem({ mode }: Props) {
     const listId = routeParams.listId;
     const itemId = isEdit ? routeParams.itemId : null;
 
-    const items = useSmartListStore((s) => s.items);
-    const addItem = useSmartListStore((s) => s.addItem);
-    const updateItem = useSmartListStore((s) => s.updateItem);
+    const { data: itemsData, isLoading } = useShoppingItems();
+    const createMutation = useCreateShoppingItemWithId();
+    const updateMutation = useUpdateShoppingItem();
 
-    const editItem = useMemo(
-        () => (itemId ? items.find((i) => i.id === itemId) ?? null : null),
-        [items, itemId]
-    );
+    const editItem = itemId ? itemsData?.items?.find((i) => i.id === itemId) ?? null : null;
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- text input
     const [name, setName] = useState(editItem?.name ?? '');
@@ -90,31 +92,48 @@ export function AddEditItem({ mode }: Props) {
         const trimmedName = name.trim();
 
         if (isEdit && editItem) {
-            updateItem(editItem.id, {
+            updateMutation.mutate(
+                {
+                    itemId: editItem.id,
+                    name: trimmedName,
+                    emoji,
+                    quantity_left: parsedLeft,
+                    consumption_per_day: parsedPerDay,
+                    restock_presets: presets,
+                },
+                {
+                    onSuccess: () => {
+                        toast.success(`${trimmedName} updated`);
+                        navigate(`/lists/${effectiveListId}/items/${editItem.id}`);
+                    },
+                    onError: (err) =>
+                        toast.error(err instanceof Error ? err.message : 'Failed to update item'),
+                }
+            );
+            return;
+        }
+
+        createMutation.mutate(
+            {
+                listId: effectiveListId,
                 name: trimmedName,
                 emoji,
                 quantity_left: parsedLeft,
                 consumption_per_day: parsedPerDay,
                 restock_presets: presets,
-            });
-            toast.success(`${trimmedName} updated`);
-            navigate(`/lists/${effectiveListId}/items/${editItem.id}`);
-            return;
-        }
-
-        addItem({
-            listId: effectiveListId,
-            name: trimmedName,
-            emoji,
-            quantity_left: parsedLeft,
-            consumption_per_day: parsedPerDay,
-            restock_presets: presets,
-        });
-        toast.success(`${trimmedName} added`);
-        navigate(`/lists/${effectiveListId}`);
+            },
+            {
+                onSuccess: () => {
+                    toast.success(`${trimmedName} added`);
+                    navigate(`/lists/${effectiveListId}`);
+                },
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to add item'),
+            }
+        );
     };
 
-    if (isEdit && !editItem) {
+    if (isEdit && !editItem && !isLoading) {
         return (
             <NotFoundCard
                 message="Item not found."

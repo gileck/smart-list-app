@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/client/components/template/ui/button';
 import { toast } from '@/client/components/template/ui/toast';
 import {
     startOfDay,
     startOfToday,
-    useChoresStore,
+    useChores,
+    useCreateChoreWithId,
     useRouter,
+    useUpdateChore,
 } from '@/client/features';
 import { NotFoundCard, RoundIconButton } from '@/client/components/project/list-ui';
 
@@ -41,14 +43,13 @@ export function AddEditChore({ mode }: Props) {
     const listId = routeParams.listId;
     const choreId = isEdit ? routeParams.itemId : null;
 
-    const chores = useChoresStore((s) => s.chores);
-    const addChore = useChoresStore((s) => s.addChore);
-    const updateChore = useChoresStore((s) => s.updateChore);
+    const { data: choresData, isLoading } = useChores();
+    const createMutation = useCreateChoreWithId();
+    const updateMutation = useUpdateChore();
 
-    const editChore = useMemo(
-        () => (choreId ? chores.find((c) => c.id === choreId) ?? null : null),
-        [chores, choreId]
-    );
+    const editChore = choreId
+        ? choresData?.chores?.find((c) => c.id === choreId) ?? null
+        : null;
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- text input
     const [name, setName] = useState(editChore?.name ?? '');
@@ -89,27 +90,44 @@ export function AddEditChore({ mode }: Props) {
         const trimmed = name.trim();
 
         if (isEdit && editChore) {
-            updateChore(editChore.id, {
-                name: trimmed,
-                repeat_interval_days: parsedInterval,
-                last_completed_at: parsedLast,
-            });
-            toast.success(`${trimmed} updated`);
-            navigate(`/lists/${effectiveListId}/items/${editChore.id}`);
+            updateMutation.mutate(
+                {
+                    choreId: editChore.id,
+                    name: trimmed,
+                    repeat_interval_days: parsedInterval,
+                    last_completed_at: parsedLast,
+                },
+                {
+                    onSuccess: () => {
+                        toast.success(`${trimmed} updated`);
+                        navigate(`/lists/${effectiveListId}/items/${editChore.id}`);
+                    },
+                    onError: (err) =>
+                        toast.error(err instanceof Error ? err.message : 'Failed to update chore'),
+                }
+            );
             return;
         }
 
-        addChore({
-            listId: effectiveListId,
-            name: trimmed,
-            repeat_interval_days: parsedInterval,
-            last_completed_at: parsedLast,
-        });
-        toast.success(`${trimmed} added`);
-        navigate(`/lists/${effectiveListId}`);
+        createMutation.mutate(
+            {
+                listId: effectiveListId,
+                name: trimmed,
+                repeat_interval_days: parsedInterval,
+                last_completed_at: parsedLast,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(`${trimmed} added`);
+                    navigate(`/lists/${effectiveListId}`);
+                },
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to add chore'),
+            }
+        );
     };
 
-    if (isEdit && !editChore) {
+    if (isEdit && !editChore && !isLoading) {
         return <NotFoundCard message="Chore not found." onBack={() => navigate('/')} />;
     }
 

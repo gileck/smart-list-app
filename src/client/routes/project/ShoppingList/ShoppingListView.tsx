@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronLeft, Pencil } from 'lucide-react';
 import {
     compareUrgency,
     status,
-    useBootstrapLists,
-    useListsStore,
+    useDeleteShoppingItem,
+    useLists,
+    useRestockShoppingItem,
     useRouter,
-    useSmartListStore,
+    useShoppingItems,
     type SmartListItem,
 } from '@/client/features';
 import { ConfirmDialog } from '@/client/components/template/ui/confirm-dialog';
@@ -25,22 +26,18 @@ export function ShoppingListView() {
     const { navigate, routeParams } = useRouter();
     const listId = routeParams.listId;
 
-    useBootstrapLists();
+    const { data: listsData } = useLists();
+    const { data: itemsData, isLoading } = useShoppingItems();
+    const restockMutation = useRestockShoppingItem();
+    const deleteMutation = useDeleteShoppingItem();
 
-    const list = useListsStore((s) => s.lists.find((l) => l.id === listId) ?? null);
-    const items = useSmartListStore((s) => s.items);
-    const restockBy = useSmartListStore((s) => s.restockBy);
-    const deleteItem = useSmartListStore((s) => s.deleteItem);
-    const runDailyConsumption = useSmartListStore((s) => s.runDailyConsumption);
+    const list = listsData?.lists?.find((l) => l.id === listId) ?? null;
+    const items = itemsData?.items ?? [];
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral confirm dialog target
     const [deleteTarget, setDeleteTarget] = useState<SmartListItem | null>(null);
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral dialog target
     const [restockTarget, setRestockTarget] = useState<SmartListItem | null>(null);
-
-    useEffect(() => {
-        runDailyConsumption();
-    }, [runDailyConsumption]);
 
     const sortedAll = useMemo(
         () => items.filter((i) => i.listId === listId).sort(compareUrgency),
@@ -56,22 +53,36 @@ export function ShoppingListView() {
         [sortedAll]
     );
 
-    if (!list) {
+    if (!list && !isLoading) {
         return <NotFoundCard message="List not found." onBack={() => navigate('/')} />;
     }
+    if (!list) return null;
 
     const handleRestockSubmit = (amount: number) => {
         if (!restockTarget) return;
-        restockBy(restockTarget.id, amount);
-        toast.success(`${restockTarget.name} restocked (${amount})`);
+        const target = restockTarget;
+        restockMutation.mutate(
+            { itemId: target.id, amount },
+            {
+                onSuccess: () => toast.success(`${target.name} restocked (${amount})`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to restock'),
+            }
+        );
     };
 
     const handleDeleteConfirm = () => {
         if (!deleteTarget) return;
-        const name = deleteTarget.name;
-        deleteItem(deleteTarget.id);
+        const target = deleteTarget;
         setDeleteTarget(null);
-        toast.success(`${name} deleted`);
+        deleteMutation.mutate(
+            { itemId: target.id },
+            {
+                onSuccess: () => toast.success(`${target.name} deleted`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete'),
+            }
+        );
     };
 
     const itemPath = (i: SmartListItem) => `/lists/${list.id}/items/${i.id}`;
@@ -130,7 +141,11 @@ export function ShoppingListView() {
                         label="All Items"
                         count={sortedAll.length}
                     />
-                    {sortedAll.length === 0 ? (
+                    {!itemsData ? (
+                        <div className="px-5 pb-4 text-[13px] italic text-muted-foreground/70">
+                            Loading…
+                        </div>
+                    ) : sortedAll.length === 0 ? (
                         <EmptyCard
                             title="No items yet"
                             hint="Tap + to add something you track daily."

@@ -76,3 +76,7 @@ package-lock.json
 yarn.lock
 .telegram-bot-sessions.json
 .agent-worktrees/
+
+# User-exported backups (smart-list export feature)
+smart-list-export-*.json
+list.json

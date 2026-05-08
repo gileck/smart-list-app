@@ -8,7 +8,9 @@ import {
     daysUntilDue,
     formatChoreDaysLabel,
     nextDueAt,
-    useChoresStore,
+    useChores,
+    useDeleteChore,
+    useMarkChoreDone,
     useRouter,
     type ChoreStatus,
 } from '@/client/features';
@@ -44,16 +46,16 @@ export function ChoreDetail() {
     const { navigate, routeParams } = useRouter();
     const choreId = routeParams.itemId;
 
-    const chores = useChoresStore((s) => s.chores);
-    const markDone = useChoresStore((s) => s.markDone);
-    const deleteChore = useChoresStore((s) => s.deleteChore);
+    const { data: choresData, isLoading } = useChores();
+    const markDoneMutation = useMarkChoreDone();
+    const deleteMutation = useDeleteChore();
 
-    const chore = chores.find((c) => c.id === choreId) ?? null;
+    const chore = choresData?.chores?.find((c) => c.id === choreId) ?? null;
 
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral confirm dialog
     const [confirmOpen, setConfirmOpen] = useState(false);
 
-    if (!chore) {
+    if (!chore && !isLoading) {
         return (
             <NotFoundCard
                 message="Chore not found."
@@ -62,22 +64,38 @@ export function ChoreDetail() {
             />
         );
     }
+    if (!chore) return null;
 
     const listPath = `/lists/${chore.listId}`;
     const days = daysUntilDue(chore);
     const meta = STATUS_META[choreStatus(chore)];
 
     const handleMarkDone = () => {
-        markDone(chore.id);
-        toast.success(`${chore.name} marked done`);
+        markDoneMutation.mutate(
+            { choreId: chore.id },
+            {
+                onSuccess: () => toast.success(`${chore.name} marked done`),
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to mark done'),
+            }
+        );
     };
 
     const handleDelete = () => {
         const name = chore.name;
-        deleteChore(chore.id);
+        const id = chore.id;
         setConfirmOpen(false);
-        toast.success(`${name} deleted`);
-        navigate(listPath);
+        deleteMutation.mutate(
+            { choreId: id },
+            {
+                onSuccess: () => {
+                    toast.success(`${name} deleted`);
+                    navigate(listPath);
+                },
+                onError: (err) =>
+                    toast.error(err instanceof Error ? err.message : 'Failed to delete'),
+            }
+        );
     };
 
     return (
