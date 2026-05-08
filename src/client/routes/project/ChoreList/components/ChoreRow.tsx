@@ -39,9 +39,9 @@ export function ChoreRow({ chore, onTap, onMarkDone, onEdit, onDelete }: Props) 
                     onTap(chore);
                 }
             }}
-            className="flex w-full cursor-pointer items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-muted/40 focus:outline-none focus-visible:bg-muted/60"
+            className="flex w-full cursor-pointer items-center gap-2.5 pl-3 pr-4 py-3.5 text-left transition-colors hover:bg-muted/40 focus:outline-none focus-visible:bg-muted/60"
         >
-            <div className="flex min-w-[56px] shrink-0 flex-col items-end">
+            <div className="flex min-w-[44px] shrink-0 flex-col items-end">
                 <span className={`font-mono text-[18px] font-medium leading-none ${heroColor}`}>
                     {heroText}
                 </span>
@@ -50,7 +50,7 @@ export function ChoreRow({ chore, onTap, onMarkDone, onEdit, onDelete }: Props) 
                 </span>
             </div>
 
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 pl-2">
                 <div className="truncate text-base font-medium tracking-tight">{chore.name}</div>
                 <div className="mt-0.5 truncate text-[13px] text-muted-foreground">
                     Every {chore.repeat_interval_days} day

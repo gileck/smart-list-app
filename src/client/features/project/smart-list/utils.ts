@@ -30,19 +30,17 @@ export function makeSampleItems(listId: string): SmartListItem[] {
         id: genId(),
         listId,
         name: '',
-        quantity_total: 0,
         quantity_left: 0,
         consumption_per_day: 0,
-        restock_amount: 0,
         created_at: now,
         updated_at: now,
         ...overrides,
     });
     return [
-        base({ name: 'Eggs', quantity_total: 24, quantity_left: 6, consumption_per_day: 3, restock_amount: 24 }),
-        base({ name: 'Oranges', quantity_total: 6, quantity_left: 1, consumption_per_day: 1, restock_amount: 6 }),
-        base({ name: 'Coffee', quantity_total: 250, quantity_left: 210, consumption_per_day: 14, restock_amount: 250 }),
-        base({ name: 'Rice', quantity_total: 1000, quantity_left: 600, consumption_per_day: 60, restock_amount: 1000 }),
-        base({ name: 'Olive Oil', quantity_total: 500, quantity_left: 480, consumption_per_day: 15, restock_amount: 500 }),
+        base({ name: 'Eggs', quantity_left: 6, consumption_per_day: 3, restock_presets: [12, 24, 30] }),
+        base({ name: 'Oranges', quantity_left: 1, consumption_per_day: 1, restock_presets: [6] }),
+        base({ name: 'Coffee', quantity_left: 210, consumption_per_day: 14, restock_presets: [250, 500] }),
+        base({ name: 'Rice', quantity_left: 3, consumption_per_day: 0.2, restock_presets: [1, 2] }),
+        base({ name: 'Olive Oil', quantity_left: 480, consumption_per_day: 15, restock_presets: [500, 1000] }),
     ];
 }

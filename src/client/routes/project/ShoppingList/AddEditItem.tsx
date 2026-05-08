@@ -29,7 +29,7 @@ export function AddEditItem({ mode }: Props) {
     // eslint-disable-next-line state-management/prefer-state-architecture -- text input
     const [emoji, setEmoji] = useState(editItem?.emoji ?? '');
     // eslint-disable-next-line state-management/prefer-state-architecture -- text input
-    const [qtyTotal, setQtyTotal] = useState(editItem ? String(editItem.quantity_total) : '');
+    const [qtyLeft, setQtyLeft] = useState(editItem ? String(editItem.quantity_left) : '');
     // eslint-disable-next-line state-management/prefer-state-architecture -- text input
     const [perDay, setPerDay] = useState(editItem ? String(editItem.consumption_per_day) : '');
     // eslint-disable-next-line state-management/prefer-state-architecture -- form-local list mirrored to a single saved field on submit
@@ -55,23 +55,21 @@ export function AddEditItem({ mode }: Props) {
         setPresets(presets.filter((p) => p !== value));
     };
 
-    const parsedTotal = parseFloat(qtyTotal);
+    const parsedLeft = parseFloat(qtyLeft);
     const parsedPerDay = parseFloat(perDay);
-
-    const baseForPreview = isEdit ? editItem?.quantity_left ?? NaN : parsedTotal;
 
     const daysPreview =
         !Number.isNaN(parsedPerDay) &&
         parsedPerDay > 0 &&
-        !Number.isNaN(baseForPreview) &&
-        baseForPreview >= 0
-            ? Math.max(0, Math.ceil(baseForPreview / parsedPerDay))
+        !Number.isNaN(parsedLeft) &&
+        parsedLeft >= 0
+            ? Math.max(0, Math.ceil(parsedLeft / parsedPerDay))
             : null;
 
     const canSave =
         name.trim().length > 0 &&
-        !Number.isNaN(parsedTotal) &&
-        parsedTotal > 0 &&
+        !Number.isNaN(parsedLeft) &&
+        parsedLeft >= 0 &&
         !Number.isNaN(parsedPerDay) &&
         parsedPerDay >= 0;
 
@@ -95,7 +93,7 @@ export function AddEditItem({ mode }: Props) {
             updateItem(editItem.id, {
                 name: trimmedName,
                 emoji,
-                quantity_total: parsedTotal,
+                quantity_left: parsedLeft,
                 consumption_per_day: parsedPerDay,
                 restock_presets: presets,
             });
@@ -108,7 +106,7 @@ export function AddEditItem({ mode }: Props) {
             listId: effectiveListId,
             name: trimmedName,
             emoji,
-            quantity_total: parsedTotal,
+            quantity_left: parsedLeft,
             consumption_per_day: parsedPerDay,
             restock_presets: presets,
         });
@@ -162,15 +160,15 @@ export function AddEditItem({ mode }: Props) {
 
                 <div className="flex">
                     <div className="flex-1 border-r border-border">
-                        <FormField label={isEdit ? 'Quantity total' : 'Quantity bought'}>
+                        <FormField label="Quantity Left">
                             <input
                                 type="number"
                                 inputMode="decimal"
                                 min="0"
-                                value={qtyTotal}
-                                onChange={(e) => setQtyTotal(e.target.value)}
-                                placeholder="24"
-                                className="w-full bg-transparent border-0 border-b-2 border-border focus:border-foreground outline-none py-2 text-[22px] font-normal placeholder:text-muted-foreground/60 transition-colors"
+                                value={qtyLeft}
+                                onChange={(e) => setQtyLeft(e.target.value)}
+                                placeholder="3"
+                                className="w-full border-0 border-b-2 border-border bg-transparent py-2 text-[22px] font-normal outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-foreground"
                             />
                         </FormField>
                     </div>
@@ -183,8 +181,8 @@ export function AddEditItem({ mode }: Props) {
                                 step="0.1"
                                 value={perDay}
                                 onChange={(e) => setPerDay(e.target.value)}
-                                placeholder="3"
-                                className="w-full bg-transparent border-0 border-b-2 border-border focus:border-foreground outline-none py-2 text-[22px] font-normal placeholder:text-muted-foreground/60 transition-colors"
+                                placeholder="0.2"
+                                className="w-full border-0 border-b-2 border-border bg-transparent py-2 text-[22px] font-normal outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-foreground"
                             />
                         </FormField>
                     </div>

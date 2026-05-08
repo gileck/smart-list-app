@@ -58,17 +58,8 @@ export function ItemDetail() {
     const listPath = `/lists/${item.listId}`;
     const isInfinite = item.consumption_per_day <= 0;
     const itemStatus = status(item);
-    const isUrgent = itemStatus === 'BUY_SOON' || itemStatus === 'OUT';
     const meta = STATUS_META[isInfinite ? 'INFINITE' : itemStatus];
     const display = daysLeftDisplay(item);
-
-    const pct =
-        item.quantity_total > 0
-            ? Math.max(
-                  0,
-                  Math.min(100, Math.round((item.quantity_left / item.quantity_total) * 100))
-              )
-            : 0;
 
     const handleRestockSubmit = (amount: number) => {
         restockBy(item.id, amount);
@@ -128,25 +119,10 @@ export function ItemDetail() {
 
                 <dl className="divide-y divide-border border-t border-border text-sm">
                     <StatRow label="Quantity left" value={String(item.quantity_left)} />
-                    <StatRow label="Total / restock amount" value={String(item.quantity_total)} />
                     <StatRow
                         label="Daily use"
                         value={isInfinite ? '—' : `${item.consumption_per_day} / day`}
                     />
-                    <div className="flex items-center justify-between px-5 py-4">
-                        <dt className="text-muted-foreground">Stock level</dt>
-                        <dd className="flex items-center gap-2.5">
-                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-                                <div
-                                    className={`h-full rounded-full transition-[width] duration-500 ${
-                                        isUrgent ? 'bg-destructive' : 'bg-success'
-                                    }`}
-                                    style={{ width: `${pct}%` }}
-                                />
-                            </div>
-                            <span className="font-mono text-base font-medium">{pct}%</span>
-                        </dd>
-                    </div>
                 </dl>
 
                 <div className="flex flex-col gap-2.5 border-t border-border px-5 py-5">

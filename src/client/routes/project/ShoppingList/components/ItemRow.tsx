@@ -31,9 +31,9 @@ export function ItemRow({ item, onTap, onRestock, onEdit, onDelete }: Props) {
                     onTap(item);
                 }
             }}
-            className="flex w-full cursor-pointer items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-muted/40 focus:outline-none focus-visible:bg-muted/60"
+            className="flex w-full cursor-pointer items-center gap-2.5 pl-3 pr-4 py-3.5 text-left transition-colors hover:bg-muted/40 focus:outline-none focus-visible:bg-muted/60"
         >
-            <div className="flex min-w-[44px] shrink-0 flex-col items-end">
+            <div className="flex shrink-0 flex-col items-end">
                 <span className={`font-mono text-[22px] font-medium leading-none ${daysColor}`}>
                     {display}
                 </span>
@@ -42,7 +42,7 @@ export function ItemRow({ item, onTap, onRestock, onEdit, onDelete }: Props) {
                 </span>
             </div>
 
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 pl-2">
                 <div className="flex items-center gap-1.5 truncate text-base font-medium tracking-tight">
                     {item.emoji && (
                         <span aria-hidden className="shrink-0 text-lg leading-none">

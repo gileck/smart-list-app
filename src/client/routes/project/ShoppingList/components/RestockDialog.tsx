@@ -35,9 +35,7 @@ export function RestockDialog({ open, onOpenChange, item, onRestock }: Props) {
     const presetButtons =
         item.restock_presets && item.restock_presets.length > 0
             ? item.restock_presets
-            : item.restock_amount > 0
-            ? [item.restock_amount]
-            : [];
+            : [1];
 
     const parsed = parseFloat(customAmount);
     const canSubmitCustom = !Number.isNaN(parsed) && parsed > 0;
