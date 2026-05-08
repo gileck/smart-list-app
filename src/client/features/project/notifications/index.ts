@@ -16,5 +16,6 @@ export {
     useUpdateNotification,
     useDeleteNotification,
     useSendNotificationNow,
+    useSendNotificationTest,
     type CreateNotificationInput,
 } from './hooks';

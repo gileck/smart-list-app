@@ -5,12 +5,14 @@ import {
     getAvailableChannels,
     getNotifications,
     sendNotificationNow as sendNotificationNowApi,
+    sendNotificationTest as sendNotificationTestApi,
     updateNotification as updateNotificationApi,
 } from '@/apis/project/notifications/client';
 import type {
     CreateNotificationRequest,
     GetAvailableChannelsResponse,
     GetNotificationsResponse,
+    SendNotificationTestRequest,
     UpdateNotificationRequest,
 } from '@/apis/project/notifications/types';
 import { useQueryDefaults } from '@/client/query/defaults';
@@ -193,6 +195,16 @@ export function useSendNotificationNow() {
     return useMutation({
         mutationFn: async (data: { notificationId: string }) => {
             const response = await sendNotificationNowApi(data);
+            if (response.data?.error) throw new Error(response.data.error);
+            return response.data;
+        },
+    });
+}
+
+export function useSendNotificationTest() {
+    return useMutation({
+        mutationFn: async (data: SendNotificationTestRequest) => {
+            const response = await sendNotificationTestApi(data);
             if (response.data?.error) throw new Error(response.data.error);
             return response.data;
         },

@@ -60,6 +60,19 @@ export interface SendNotificationNowResponse {
     error?: string;
 }
 
+/** Send a test using inline (unsaved) form values — no persistence. */
+export interface SendNotificationTestRequest {
+    listId: string;
+    filter: NotificationFilter;
+    channels: NotificationChannel[];
+}
+export interface SendNotificationTestResponse {
+    sent?: boolean;
+    message?: string;
+    channels?: NotificationChannel[];
+    error?: string;
+}
+
 export interface GetAvailableChannelsRequest {
     _?: never;
 }

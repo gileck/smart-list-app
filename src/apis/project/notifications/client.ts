@@ -6,6 +6,7 @@ import {
     API_GET_AVAILABLE_CHANNELS,
     API_GET_NOTIFICATIONS,
     API_SEND_NOTIFICATION_NOW,
+    API_SEND_NOTIFICATION_TEST,
     API_UPDATE_NOTIFICATION,
 } from './index';
 import {
@@ -19,6 +20,8 @@ import {
     GetNotificationsResponse,
     SendNotificationNowRequest,
     SendNotificationNowResponse,
+    SendNotificationTestRequest,
+    SendNotificationTestResponse,
     UpdateNotificationRequest,
     UpdateNotificationResponse,
 } from './types';
@@ -47,6 +50,11 @@ export const sendNotificationNow = async (
     params: SendNotificationNowRequest
 ): Promise<CacheResult<SendNotificationNowResponse>> =>
     apiClient.post(API_SEND_NOTIFICATION_NOW, params);
+
+export const sendNotificationTest = async (
+    params: SendNotificationTestRequest
+): Promise<CacheResult<SendNotificationTestResponse>> =>
+    apiClient.post(API_SEND_NOTIFICATION_TEST, params);
 
 export const getAvailableChannels = async (
     params: GetAvailableChannelsRequest = {}

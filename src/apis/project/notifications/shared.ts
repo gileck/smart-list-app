@@ -119,6 +119,19 @@ export interface DispatchResult {
     title?: string;
 }
 
+function getAppBaseUrl(): string {
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+        return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    }
+    if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`;
+    }
+    if (process.env.NEXT_PUBLIC_APP_URL) {
+        return process.env.NEXT_PUBLIC_APP_URL;
+    }
+    return 'http://localhost:3000';
+}
+
 export async function dispatchNotification(
     config: NotificationConfigDoc | NotificationConfigClient,
     userIdObj: ObjectId,
@@ -137,6 +150,13 @@ export async function dispatchNotification(
     const finalTitle = prefix + built.title;
     const userIdStr = userIdObj.toString();
 
+    const listIdStr = toStringId(
+        (config as NotificationConfigDoc).listId ??
+            (config as NotificationConfigClient).listId
+    );
+    const listPath = `/lists/${listIdStr}`;
+    const fullUrl = `${getAppBaseUrl()}${listPath}`;
+
     const sentChannels: NotificationChannel[] = [];
     const failures: { channel: NotificationChannel; error: string }[] = [];
 
@@ -146,7 +166,7 @@ export async function dispatchNotification(
                 const results = await sendPushToUser(userIdStr, {
                     title: finalTitle,
                     body: finalBody,
-                    url: `/lists/${toStringId((config as NotificationConfigDoc).listId ?? (config as NotificationConfigClient).listId)}`,
+                    url: listPath,
                 });
                 if (results.length === 0) {
                     failures.push({ channel, error: 'No push subscriptions for user' });
@@ -160,7 +180,8 @@ export async function dispatchNotification(
                 });
             }
         } else if (channel === 'telegram') {
-            const result = await sendTelegramNotificationToUser(userIdStr, finalBody);
+            const telegramBody = `${finalBody}\n\n👉 ${fullUrl}`;
+            const result = await sendTelegramNotificationToUser(userIdStr, telegramBody);
             if (result.success) sentChannels.push(channel);
             else failures.push({ channel, error: result.error ?? 'telegram failed' });
         }

@@ -8,7 +8,7 @@ import {
     useLists,
     useNotifications,
     useRouter,
-    useSendNotificationNow,
+    useSendNotificationTest,
     useUpdateNotification,
     type CreateNotificationInput,
     type NotificationChannel,
@@ -60,7 +60,7 @@ export function AddEditNotification({ mode }: Props) {
     const { data: channelsData } = useAvailableChannels();
     const createMutation = useCreateNotificationWithId();
     const updateMutation = useUpdateNotification();
-    const sendNowMutation = useSendNotificationNow();
+    const sendTestMutation = useSendNotificationTest();
 
     const editConfig = notificationId
         ? notificationsData?.notifications?.find((n) => n.id === notificationId) ?? null
@@ -132,7 +132,7 @@ export function AddEditNotification({ mode }: Props) {
         enabled,
     });
 
-    const handleSave = (after: 'back' | 'sendTest' = 'back') => {
+    const handleSave = () => {
         if (!canSave) return;
         const payload = buildPayload();
 
@@ -149,8 +149,7 @@ export function AddEditNotification({ mode }: Props) {
                 {
                     onSuccess: () => {
                         toast.success('Notification updated');
-                        if (after === 'sendTest') runSendNow(editConfig.id);
-                        else goBack();
+                        goBack();
                     },
                     onError: (err) =>
                         toast.error(
@@ -162,29 +161,35 @@ export function AddEditNotification({ mode }: Props) {
         }
 
         createMutation.mutate(payload, {
-            onSuccess: (created) => {
+            onSuccess: () => {
                 toast.success('Notification created');
-                if (after === 'sendTest' && created?.id) runSendNow(created.id);
-                else goBack();
+                goBack();
             },
             onError: (err) =>
                 toast.error(err instanceof Error ? err.message : 'Failed to create'),
         });
     };
 
-    const runSendNow = (id: string) => {
-        sendNowMutation.mutate(
-            { notificationId: id },
+    const canSendTest =
+        !!listId && validThreshold && channels.length > 0;
+
+    const handleSendTest = () => {
+        if (!canSendTest) return;
+        sendTestMutation.mutate(
+            {
+                listId,
+                filter: { type: filterType, daysThreshold: parsedThreshold },
+                channels,
+            },
             {
                 onSuccess: (data) => {
                     if (data?.sent) {
                         toast.success(
-                            `Sent via ${data.channels?.join(', ') ?? 'channel(s)'}`
+                            `Test sent via ${data.channels?.join(', ') ?? 'channel(s)'}`
                         );
                     } else {
-                        toast.info('No channels delivered the test');
+                        toast.info('Test sent — no channels delivered');
                     }
-                    goBack();
                 },
                 onError: (err) =>
                     toast.error(err instanceof Error ? err.message : 'Send failed'),
@@ -423,7 +428,7 @@ export function AddEditNotification({ mode }: Props) {
                     <div className="flex flex-col gap-2.5 px-5 pt-6">
                         <Button
                             size="lg"
-                            onClick={() => handleSave('back')}
+                            onClick={handleSave}
                             disabled={!canSave}
                             className="w-full"
                         >
@@ -432,12 +437,12 @@ export function AddEditNotification({ mode }: Props) {
                         <Button
                             variant="outline"
                             size="lg"
-                            onClick={() => handleSave('sendTest')}
-                            disabled={!canSave}
+                            onClick={handleSendTest}
+                            disabled={!canSendTest || sendTestMutation.isPending}
                             className="w-full"
                         >
                             <Send className="mr-2 h-4 w-4" />
-                            Save & send test now
+                            {sendTestMutation.isPending ? 'Sending…' : 'Send test now'}
                         </Button>
                         <Button variant="outline" size="lg" onClick={goBack} className="w-full">
                             Cancel
