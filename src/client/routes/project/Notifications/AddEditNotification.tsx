@@ -15,6 +15,13 @@ import {
     type NotificationFrequency,
 } from '@/client/features';
 import { NotFoundCard, RoundIconButton } from '@/client/components/project/list-ui';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/client/components/template/ui/select';
 
 type Props = { mode: 'add' | 'edit' };
 
@@ -245,19 +252,25 @@ export function AddEditNotification({ mode }: Props) {
                     </Field>
 
                     <Field label="List">
-                        <select
-                            value={listId}
-                            onChange={(e) => setListId(e.target.value)}
+                        <Select
+                            value={listId || undefined}
+                            onValueChange={setListId}
                             disabled={isEdit}
-                            className="h-10 w-full rounded-lg border border-border bg-background px-3 text-base outline-none transition-colors focus:border-foreground"
                         >
-                            {!listId && <option value="">— pick a list —</option>}
-                            {lists.map((l) => (
-                                <option key={l.id} value={l.id}>
-                                    {l.name} ({l.type})
-                                </option>
-                            ))}
-                        </select>
+                            <SelectTrigger>
+                                <SelectValue placeholder="— pick a list —" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {lists.map((l) => (
+                                    <SelectItem key={l.id} value={l.id}>
+                                        {l.name}{' '}
+                                        <span className="text-muted-foreground">
+                                            ({l.type})
+                                        </span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         {isEdit && (
                             <p className="text-[12px] text-muted-foreground">
                                 List can&apos;t be changed after creation.
@@ -309,17 +322,21 @@ export function AddEditNotification({ mode }: Props) {
                     )}
 
                     <Field label="Time">
-                        <select
-                            value={hourOfDay}
-                            onChange={(e) => setHourOfDay(parseInt(e.target.value, 10))}
-                            className="h-10 w-full rounded-lg border border-border bg-background px-3 text-base outline-none transition-colors focus:border-foreground"
+                        <Select
+                            value={String(hourOfDay)}
+                            onValueChange={(v) => setHourOfDay(parseInt(v, 10))}
                         >
-                            {HOURS.map((h) => (
-                                <option key={h} value={h}>
-                                    {formatHour(h)}
-                                </option>
-                            ))}
-                        </select>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {HOURS.map((h) => (
+                                    <SelectItem key={h} value={String(h)}>
+                                        {formatHour(h)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </Field>
 
                     <Field label={filterLabel}>
