@@ -2,12 +2,9 @@
   "templateRepo": "git@github.com:gileck/app-template-ai.git",
   "templateBranch": "main",
   "templateLocalPath": "../app-template-ai",
-  "lastSyncCommit": "f72070680c2f46c4d4eb3de268a28e118e51f65e",
-  "lastSyncDate": "2026-05-05T08:37:50.313Z",
+  "lastSyncCommit": "a102e29f0d8eff274ee9bb2eb2433467fa0ebf83",
+  "lastSyncDate": "2026-05-08T06:53:25.297Z",
   "projectOverrides": [
     "scripts/template/generate-icons.ts"
-  ],
-  "init": {
-    "appConfig": true
-  }
+  ]
 }
