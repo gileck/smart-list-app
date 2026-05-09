@@ -14,6 +14,11 @@ type Props = {
     onDelete: (item: SmartListItem) => void;
 };
 
+function formatQuantity(n: number): string {
+    if (Number.isInteger(n)) return String(n);
+    return n.toFixed(1).replace(/\.0$/, '');
+}
+
 export function ItemRow({ item, onTap, onRestock, onEdit, onDelete }: Props) {
     const display = daysLeftDisplay(item);
     const itemStatus = status(item);
@@ -52,7 +57,7 @@ export function ItemRow({ item, onTap, onRestock, onEdit, onDelete }: Props) {
                     <span className="truncate">{item.name}</span>
                 </div>
                 <div className="mt-0.5 truncate text-[13px] text-muted-foreground">
-                    {item.quantity_left} left · {item.consumption_per_day}/day
+                    {formatQuantity(item.quantity_left)} left · {item.consumption_per_day}/day
                 </div>
             </div>
 

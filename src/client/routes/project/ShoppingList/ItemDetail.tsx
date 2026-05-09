@@ -140,7 +140,7 @@ export function ItemDetail() {
                 </section>
 
                 <dl className="divide-y divide-border border-t border-border text-sm">
-                    <StatRow label="Quantity left" value={String(item.quantity_left)} />
+                    <StatRow label="Quantity left" value={formatNumber(item.quantity_left)} />
                     <StatRow
                         label="Daily use"
                         value={isInfinite ? '—' : `${item.consumption_per_day} / day`}
