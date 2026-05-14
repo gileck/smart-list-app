@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, Pencil } from 'lucide-react';
 import {
-    compareUrgency,
-    status,
     useDeleteShoppingItem,
     useLists,
     useRestockShoppingItem,
@@ -17,9 +15,8 @@ import {
     Fab,
     NotFoundCard,
     RoundIconButton,
-    SectionHeader,
 } from '@/client/components/project/list-ui';
-import { ItemRow } from './components/ItemRow';
+import { ShoppingItemSections } from './components/ShoppingItemSections';
 import { RestockDialog } from './components/RestockDialog';
 
 export function ShoppingListView() {
@@ -39,18 +36,9 @@ export function ShoppingListView() {
     // eslint-disable-next-line state-management/prefer-state-architecture -- ephemeral dialog target
     const [restockTarget, setRestockTarget] = useState<SmartListItem | null>(null);
 
-    const sortedAll = useMemo(
-        () => items.filter((i) => i.listId === listId).sort(compareUrgency),
+    const totalCount = useMemo(
+        () => items.filter((i) => i.listId === listId).length,
         [items, listId]
-    );
-
-    const buySoon = useMemo(
-        () =>
-            sortedAll.filter((i) => {
-                const s = status(i);
-                return s === 'BUY_SOON' || s === 'OUT';
-            }),
-        [sortedAll]
     );
 
     if (!list && !isLoading) {
@@ -99,7 +87,7 @@ export function ShoppingListView() {
                             {list.name}
                         </h1>
                         <p className="text-[12px] text-muted-foreground">
-                            {sortedAll.length} item{sortedAll.length !== 1 ? 's' : ''}
+                            {totalCount} item{totalCount !== 1 ? 's' : ''}
                         </p>
                     </div>
                     <RoundIconButton
@@ -110,62 +98,21 @@ export function ShoppingListView() {
                     </RoundIconButton>
                 </header>
 
-                {buySoon.length > 0 && (
-                    <section className="border-t border-border bg-destructive/5">
-                        <SectionHeader
-                            color="text-destructive"
-                            dotColor="bg-destructive"
-                            label="Buy Soon"
-                            count={buySoon.length}
-                        />
-                        <ul className="divide-y divide-destructive/15">
-                            {buySoon.map((item) => (
-                                <li key={item.id}>
-                                    <ItemRow
-                                        item={item}
-                                        onTap={(i) => navigate(itemPath(i))}
-                                        onRestock={setRestockTarget}
-                                        onEdit={(i) => navigate(`${itemPath(i)}/edit`)}
-                                        onDelete={setDeleteTarget}
-                                    />
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
-                )}
-
-                <section className="border-t border-border">
-                    <SectionHeader
-                        color="text-success"
-                        dotColor="bg-success"
-                        label="All Items"
-                        count={sortedAll.length}
-                    />
-                    {!itemsData ? (
-                        <div className="px-5 pb-4 text-[13px] italic text-muted-foreground/70">
-                            Loading…
-                        </div>
-                    ) : sortedAll.length === 0 ? (
+                <ShoppingItemSections
+                    items={items}
+                    isLoaded={!!itemsData}
+                    listId={listId}
+                    emptyState={
                         <EmptyCard
                             title="No items yet"
                             hint="Tap + to add something you track daily."
                         />
-                    ) : (
-                        <ul className="divide-y divide-border">
-                            {sortedAll.map((item) => (
-                                <li key={item.id}>
-                                    <ItemRow
-                                        item={item}
-                                        onTap={(i) => navigate(itemPath(i))}
-                                        onRestock={setRestockTarget}
-                                        onEdit={(i) => navigate(`${itemPath(i)}/edit`)}
-                                        onDelete={setDeleteTarget}
-                                    />
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </section>
+                    }
+                    onTap={(i) => navigate(itemPath(i))}
+                    onRestock={setRestockTarget}
+                    onEdit={(i) => navigate(`${itemPath(i)}/edit`)}
+                    onDelete={setDeleteTarget}
+                />
             </div>
 
             <Fab
